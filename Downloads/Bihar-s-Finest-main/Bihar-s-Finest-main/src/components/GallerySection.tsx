@@ -3,15 +3,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const availableImages = [
-  '/images/gallery/sorting.png',
-  '/images/gallery/roasting.png',
-  '/images/gallery/macro.png',
-  '/images/gallery/lifestyle.png',
-  '/images/reels/harvesting.png',
-  '/images/reels/factory.png',
-  '/images/reels/snack.png',
-  '/images/reels/flatlay.png',
-  '/images/wetlands_heritage.png',
+  "/gallery/WhatsApp Image 2026-08-01 at 2.51.08 PM.jpeg",
+  "/gallery/WhatsApp Image 2026-08-01 at 2.51.09 PM.jpeg",
+  "/gallery/WhatsApp Image 2026-08-01 at 2.51.10 PM.jpeg",
+  "/gallery/WhatsApp Image 2026-08-01 at 2.52.12 PM.jpeg",
+  "/gallery/WhatsApp Image 2026-08-01 at 2.58.43 PM.jpeg",
+  "/gallery/WhatsApp Image 2026-08-01 at 2.58.47 PM.jpeg",
+  "/gallery/WhatsApp Image 2026-08-01 at 2.58.49 PM.jpeg"
 ];
 
 const titles = [
@@ -33,11 +31,10 @@ const aspectRatios = [
   'aspect-[21/9]'
 ];
 
-// Generate exactly 24 unique feeling items using combinations
-const galleryItems = Array.from({ length: 24 }).map((_, i) => {
+const galleryItems = availableImages.map((src, i) => {
   return {
     id: i,
-    src: availableImages[i % availableImages.length],
+    src,
     title: titles[i % titles.length].title,
     sub: titles[i % titles.length].sub,
     // Add some pseudo-randomness to aspect ratios based on index
@@ -61,12 +58,12 @@ export default function GallerySection() {
   }, [lightboxIndex]);
 
   return (
-    <section className="relative w-full py-24 bg-[#FAF8F4] overflow-hidden border-t border-[#EBE6DA]">
-      {/* Very subtle background pattern */}
-      <div 
-        className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
-        style={{ backgroundImage: 'url("/images/hero/02.png")', backgroundSize: '400px', backgroundRepeat: 'repeat', backgroundPosition: 'center' }}
-      />
+    <section id="gallery" className="relative w-full py-24 bg-transparent overflow-hidden border-t border-[#EBE6DA]">
+      {/* ─── AMBIENT SECTION DECOR: SOFT SPOTLIGHTS ─── */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[20%] left-[20%] w-[800px] h-[800px] bg-[radial-gradient(circle,_#FDEBCC_0%,_transparent_60%)] blur-[100px] opacity-[0.15]" />
+        <div className="absolute bottom-[20%] right-[20%] w-[1000px] h-[1000px] bg-[radial-gradient(circle,_#E2C8BA_0%,_transparent_60%)] blur-[120px] opacity-[0.1]" />
+      </div>
       
       <div className="relative z-10 w-full">
         {/* Section Header */}

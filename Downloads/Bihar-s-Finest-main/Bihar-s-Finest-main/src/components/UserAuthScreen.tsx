@@ -701,8 +701,8 @@ export default function UserAuthScreen({
   }
 
   return (
-    <div className={`w-full h-full font-sans ${(!isLogin || isForgotPassword || currentUser) ? 'max-w-7xl mx-auto px-6 pt-8 md:pt-12 pb-20' : ''}`}>
-      {(!isLogin || isForgotPassword || currentUser) && <div className="w-16 h-[2px] bg-secondary mx-auto mb-6" />}
+    <div className={`w-full h-full font-sans ${isForgotPassword ? 'max-w-7xl mx-auto px-6 pt-8 md:pt-12 pb-20' : ''}`}>
+      {isForgotPassword && <div className="w-16 h-[2px] bg-secondary mx-auto mb-6" />}
 
       {isForgotPassword ? (
         // Forgot Password Screen
@@ -754,333 +754,311 @@ export default function UserAuthScreen({
           </button>
         </div>
       ) : (
-        <div className="relative w-full h-[90vh] md:h-[640px] overflow-hidden bg-[#FAF8F4] rounded-[28px] flex flex-col md:flex-row">
+        <div className="relative w-full h-full flex flex-col md:flex-row bg-[#FAF8F4] overflow-hidden">
           
           {/* Fixed Left Panel Container */}
-          <div className="hidden md:flex md:w-[40%] relative h-full bg-[#2A3319] text-white overflow-hidden shrink-0">
-            <AnimatePresence initial={false}>
-              {isLogin ? (
-                <motion.div
-                  key="left-login"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35, ease: 'easeInOut' }}
-                  className="absolute inset-0 flex flex-col justify-between p-12"
-                >
-                  <div className="absolute inset-0 bg-[#2A3319]/40 z-10 mix-blend-multiply" />
-                  <img 
-                    src="/images/login-banner.jpg" 
-                    className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-90 z-0" 
-                    alt="Login Banner" 
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                    }} 
-                  />
-                  <video 
-                    src="/flow.mp4" 
-                    autoPlay loop muted playsInline 
-                    className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-50 z-0 hidden" 
-                  />
-                  
-                  <div className="relative z-20 space-y-6 mt-4">
-                    <h2 className="font-serif text-4xl lg:text-5xl leading-tight font-bold tracking-wide">
-                      WELCOME BACK TO THE<br/>BIHAR BITE FAMILY.
-                    </h2>
-                    <ul className="space-y-4 font-medium text-sm tracking-wide text-white/90 mt-8">
-                      <li className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Premium Healthy Snacks
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Farm Fresh Products
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Exclusive Member Offers
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="relative z-20">
-                    <p className="font-serif italic text-sm lg:text-base text-white/80">
-                      "Experience authentic Bihar Makhana with every order."
-                    </p>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="left-register"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35, ease: 'easeInOut' }}
-                  className="absolute inset-0 flex flex-col justify-between p-12"
-                >
-                  <div className="absolute inset-0 bg-[#0A1A12] z-0" />
-                  
-                  {/* Layered Composition */}
-                  <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                    {/* Background glow / Warm luxury lighting */}
-                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#D4AF37]/30 rounded-full blur-[100px] mix-blend-screen" />
-                    <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#8B5A2B]/40 rounded-full blur-[80px] mix-blend-screen" />
-
-                    {/* Product Layers */}
-                    <img src="/images/04.png" alt="Leaves" className="absolute -left-20 -top-10 w-[140%] object-contain opacity-30 blur-[2px] transform -rotate-12" />
-                    <img src="/images/hero/03.png" alt="Bowl" className="absolute -right-24 top-1/4 w-80 object-contain opacity-50 blur-[1px] transform rotate-12" />
-                    <img src="/images/01.png" alt="Pouch" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 object-contain opacity-70" />
-                    <img src="/images/hero/02.png" alt="Tin" className="absolute -left-10 bottom-10 w-64 object-contain opacity-60 transform -rotate-6" />
-                    <img src="/images/hero/hero-composition.png" alt="Makhana" className="absolute -right-10 -bottom-20 w-96 object-contain opacity-40 blur-[3px]" />
-
-                    {/* Dark Green Overlay */}
+          <div className="hidden md:flex md:w-[40%] relative bg-[#2A3319] text-white overflow-hidden shrink-0 min-h-[300px]">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={isLogin ? "left-login" : "left-register"}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35, ease: 'easeInOut' }}
+                className="absolute inset-0 flex flex-col justify-between p-8 pb-6"
+              >
+                {isLogin ? (
+                  <>
                     <div className="absolute inset-0 bg-[#0A1A12]/70 z-10" />
-                  </div>
-
-                  <div className="relative z-20 space-y-6 mt-4">
-                    <h2 className="font-serif text-4xl lg:text-5xl leading-tight font-bold tracking-wide text-white drop-shadow-lg">
-                      JOIN THE<br/>BIHAR BITE<br/>SNACKERS<br/>CLUB.
-                    </h2>
-                    <ul className="space-y-4 font-sans font-medium text-sm tracking-wide text-white/90 mt-8">
-                      <li className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-[#D4AF37]" /> Premium Healthy Snacks
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-[#D4AF37]" /> Exclusive Member Benefits
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-[#D4AF37]" /> Faster Checkout
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-[#D4AF37]" /> Order Tracking
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="relative z-20">
-                    <p className="font-serif italic text-sm lg:text-base text-white/80">
-                      "Healthy snacking starts here."
-                    </p>
-                  </div>
-                </motion.div>
-              )}
+                    <img 
+                      src="/images/login-banner.jpg" 
+                      className="absolute inset-0 w-full h-full object-cover opacity-90 z-0" 
+                      alt="Login Banner" 
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }} 
+                    />
+                    <video 
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      disablePictureInPicture
+                      src="/flow.mp4" 
+                      className="absolute inset-0 w-full h-full object-cover opacity-50 z-0 hidden"
+                    />
+                    
+                    <div className="relative z-20 flex flex-col gap-5 mt-2">
+                      <h2 className="font-serif text-[40px] lg:text-[56px] leading-[0.95] font-bold tracking-wide">
+                        WELCOME BACK TO THE<br/>BIHAR BITE FAMILY.
+                      </h2>
+                      <ul className="flex flex-col gap-3.5 font-medium text-[17px] tracking-wide text-white/90">
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Premium Healthy Snacks
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Farm Fresh Products
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Exclusive Member Offers
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="relative z-20 mt-auto">
+                      <p className="font-serif italic text-[15px] text-white/80">
+                        "Experience authentic Bihar Makhana with every order."
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-[#0A1A12] z-0" />
+                    
+                    {/* Layered Composition */}
+                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                      {/* Background glow / Warm luxury lighting */}
+                      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#D4AF37]/30 rounded-full blur-[100px] mix-blend-screen" />
+                      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#8B5A2B]/40 rounded-full blur-[80px] mix-blend-screen" />
+  
+                      {/* Product Layers */}
+                      <img src="/images/04.png" alt="Leaves" className="absolute -left-20 -top-10 w-[140%] object-contain opacity-30 blur-[2px] transform -rotate-12" />
+                      <img src="/images/hero/03.png" alt="Bowl" className="absolute -right-24 top-1/4 w-80 object-contain opacity-50 blur-[1px] transform rotate-12" />
+                      <img src="/images/01.png" alt="Pouch" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 object-contain opacity-70" />
+                      <img src="/images/hero/02.png" alt="Tin" className="absolute -left-10 bottom-10 w-64 object-contain opacity-60 transform -rotate-6" />
+                      <img src="/images/hero/hero-composition.png" alt="Makhana" className="absolute -right-10 -bottom-20 w-96 object-contain opacity-40 blur-[3px]" />
+  
+                      {/* Dark Green Overlay */}
+                      <div className="absolute inset-0 bg-[#0A1A12]/70 z-10" />
+                    </div>
+  
+                    <div className="relative z-20 flex flex-col gap-5 mt-2">
+                      <h2 className="font-serif text-[40px] lg:text-[56px] leading-[0.95] font-bold tracking-wide">
+                        JOIN THE<br/>BIHAR BITE<br/>SNACKERS<br/>CLUB.
+                      </h2>
+                      <ul className="flex flex-col gap-3.5 font-medium text-[17px] tracking-wide text-white/90">
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Premium Healthy Snacks
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Exclusive Member Benefits
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Faster Checkout
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-[#C1A87D]" /> Order Tracking
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="relative z-20 mt-auto">
+                      <p className="font-serif italic text-[15px] text-white/80">
+                        "Healthy snacking starts here."
+                      </p>
+                    </div>
+                  </>
+                )}
+              </motion.div>
             </AnimatePresence>
           </div>
 
           {/* Right Sliding Panel Container */}
-          <div className="w-full md:w-[60%] relative h-full overflow-hidden shrink-0 bg-[#FAF8F4]">
-            <AnimatePresence initial={false}>
-              {isLogin ? (
-                <motion.div
-                  key="right-login"
-                  initial={{ x: '-20%', opacity: 0 }}
-                  animate={{ x: '0%', opacity: 1 }}
-                  exit={{ x: '-20%', opacity: 0 }}
-                  transition={{ duration: 0.35, ease: 'easeInOut' }}
-                  className="absolute inset-0 flex flex-col justify-center p-8 md:p-16 lg:p-24 overflow-y-auto custom-scrollbar"
-                >
-                  <div className="max-w-md w-full mx-auto space-y-8 my-auto">
-                    <div className="space-y-2">
-                      <h2 className="font-serif text-3xl md:text-4xl font-light text-[#4A4A3A]">Sign In</h2>
-                      <p className="text-secondary font-serif italic text-sm md:text-base">Welcome back! Please sign in to continue.</p>
+          <div className="w-full md:w-[60%] relative flex flex-col shrink-0 bg-[#FAF8F4]">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={isLogin ? "right-login" : "right-register"}
+                initial={{ x: isLogin ? '-20%' : '20%', opacity: 0 }}
+                animate={{ x: '0%', opacity: 1 }}
+                exit={{ x: isLogin ? '-20%' : '20%', opacity: 0 }}
+                transition={{ duration: 0.35, ease: 'easeInOut' }}
+                className="relative w-full flex-grow flex flex-col p-[20px] md:p-[32px] overflow-y-auto custom-scrollbar"
+              >
+                <div className="max-w-md w-full mx-auto flex flex-col justify-between h-full">
+                  <div className="flex flex-col gap-5">
+                    <div className="flex flex-col gap-1">
+                      <h2 className="font-serif text-3xl md:text-4xl font-light text-[#4A4A3A]">
+                        {isLogin ? "Sign In" : "Create Account"}
+                      </h2>
+                      <p className="text-secondary font-serif italic text-sm md:text-base">
+                        {isLogin ? "Welcome back! Please sign in to continue." : "Join us to start your healthy snacking journey."}
+                      </p>
                     </div>
 
-                    <form onSubmit={handleLoginSubmit} className="space-y-5">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] tracking-wider uppercase font-bold text-[#4A4A3A]">Email Address</label>
-                        <div className="relative">
-                          <input
-                            type="email"
-                            required
-                            placeholder="name@email.com"
-                            value={loginEmail}
-                            onChange={(e) => setLoginEmail(e.target.value)}
-                            className="w-full bg-white border border-outline-variant/30 rounded-2xl py-3.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#7C8464]/20 focus:border-[#7C8464] transition-all duration-300 text-on-surface"
-                          />
-                          <Mail className="absolute left-4 top-4 w-4 h-4 text-on-surface-variant/60" />
+                    {isLogin ? (
+                      <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3.5">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] tracking-wider uppercase font-bold text-[#4A4A3A]">Email Address</label>
+                          <div className="relative">
+                            <input
+                              type="email"
+                              required
+                              placeholder="name@email.com"
+                              value={loginEmail}
+                              onChange={(e) => setLoginEmail(e.target.value)}
+                              className="w-full bg-white border border-outline-variant/30 rounded-2xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#7C8464]/20 focus:border-[#7C8464] transition-all duration-300 text-on-surface"
+                            />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60" />
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] tracking-wider uppercase font-bold text-[#4A4A3A]">Password</label>
-                        <div className="relative">
-                          <input
-                            type="password"
-                            required
-                            placeholder="••••••••"
-                            value={loginPassword}
-                            onChange={(e) => setLoginPassword(e.target.value)}
-                            className="w-full bg-white border border-outline-variant/30 rounded-2xl py-3.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#7C8464]/20 focus:border-[#7C8464] transition-all duration-300 text-on-surface"
-                          />
-                          <Lock className="absolute left-4 top-4 w-4 h-4 text-on-surface-variant/60" />
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] tracking-wider uppercase font-bold text-[#4A4A3A]">Password</label>
+                          <div className="relative">
+                            <input
+                              type="password"
+                              required
+                              placeholder="••••••••"
+                              value={loginPassword}
+                              onChange={(e) => setLoginPassword(e.target.value)}
+                              className="w-full bg-white border border-outline-variant/30 rounded-2xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#7C8464]/20 focus:border-[#7C8464] transition-all duration-300 text-on-surface"
+                            />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60" />
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="flex justify-between items-center pt-1 text-xs">
-                        <label className="flex items-center gap-2 cursor-pointer select-none text-on-surface-variant/80 font-medium">
-                          <input
-                            type="checkbox"
-                            checked={rememberMe}
-                            onChange={(e) => setRememberMe(e.target.checked)}
-                            className="rounded border-[#E5DFD1] text-primary focus:ring-primary/20"
-                          />
-                          Remember me
-                        </label>
+                        <div className="flex justify-between items-center pt-1 text-xs">
+                          <label className="flex items-center gap-2 cursor-pointer select-none text-on-surface-variant/80 font-medium">
+                            <input
+                              type="checkbox"
+                              checked={rememberMe}
+                              onChange={(e) => setRememberMe(e.target.checked)}
+                              className="rounded border-[#E5DFD1] text-primary focus:ring-primary/20"
+                            />
+                            Remember me
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setIsForgotPassword(true)}
+                            className="text-secondary font-bold hover:underline"
+                          >
+                            Forgot Password?
+                          </button>
+                        </div>
+
                         <button
-                          type="button"
-                          onClick={() => setIsForgotPassword(true)}
-                          className="text-secondary font-bold hover:underline"
+                          type="submit"
+                          disabled={authLoading}
+                          className="w-full bg-[#143A2A] hover:bg-[#0E281C] text-white h-[50px] rounded-full text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-95 shadow-lg mt-2 cursor-pointer"
                         >
-                          Forgot Password?
+                          {authLoading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              Sign In
+                              <ArrowRight className="w-5 h-5" />
+                            </>
+                          )}
                         </button>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={authLoading}
-                        className="w-full bg-[#143A2A] hover:bg-[#0E281C] text-white h-[54px] rounded-full text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-95 shadow-lg mt-6 cursor-pointer"
-                      >
-                        {authLoading ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <>
-                            Sign In
-                            <ArrowRight className="w-5 h-5" />
-                          </>
-                        )}
-                      </button>
-                    </form>
-
-                    <div className="text-center pt-4 text-sm text-on-surface-variant/80">
-                      <span>Don't have an account? </span>
-                      <button
-                        onClick={() => setIsLogin(false)}
-                        className="text-secondary font-bold hover:underline cursor-pointer"
-                      >
-                        Create Account
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="right-register"
-                  initial={{ x: '20%', opacity: 0 }}
-                  animate={{ x: '0%', opacity: 1 }}
-                  exit={{ x: '20%', opacity: 0 }}
-                  transition={{ duration: 0.35, ease: 'easeInOut' }}
-                  className="absolute inset-0 flex flex-col justify-center p-6 md:p-10 lg:p-12 overflow-y-auto custom-scrollbar"
-                >
-                  <div className="max-w-md w-full mx-auto space-y-5 my-auto">
-                    
-                    {/* Title with Gold Accent Line */}
-                    <div className="space-y-3">
-                      <div className="w-12 h-1 bg-[#D4AF37] rounded-full mb-3"></div>
-                      <h2 className="font-serif text-3xl md:text-4xl font-light text-[#2A3319] tracking-tight">Create Account</h2>
-                    </div>
-
-                    <form onSubmit={handleRegisterSubmit} className="space-y-4 pt-1">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] tracking-widest uppercase font-bold text-[#4A4A3A]/70">Full Name</label>
-                        <div className="relative shadow-sm rounded-xl">
-                          <input
-                            type="text"
-                            required
-                            placeholder="Mithila Kumar"
-                            value={regFullName}
-                            onChange={(e) => setRegFullName(e.target.value)}
-                            className="w-full bg-[#FFFFFF] border border-[#E5DFD1] rounded-xl py-3 pl-11 pr-4 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-[#2A3319]/20 focus:border-[#2A3319] transition-all duration-300 text-[#2A3319] placeholder:text-[#2A3319]/30"
-                          />
-                          <UserIcon className="absolute left-4 top-3.5 w-4 h-4 text-[#2A3319]/40" />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] tracking-widest uppercase font-bold text-[#4A4A3A]/70">Email Address</label>
-                        <div className="relative shadow-sm rounded-xl">
-                          <input
-                            type="email"
-                            required
-                            placeholder="name@email.com"
-                            value={regEmail}
-                            onChange={(e) => setRegEmail(e.target.value)}
-                            className="w-full bg-[#FFFFFF] border border-[#E5DFD1] rounded-xl py-3 pl-11 pr-4 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-[#2A3319]/20 focus:border-[#2A3319] transition-all duration-300 text-[#2A3319] placeholder:text-[#2A3319]/30"
-                          />
-                          <Mail className="absolute left-4 top-3.5 w-4 h-4 text-[#2A3319]/40" />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] tracking-widest uppercase font-bold text-[#4A4A3A]/70">Phone Number</label>
-                        <div className="relative shadow-sm rounded-xl">
-                          <input
-                            type="tel"
-                            required
-                            placeholder="+91 XXXXX XXXXX"
-                            value={regMobile}
-                            onChange={(e) => setRegMobile(e.target.value)}
-                            className="w-full bg-[#FFFFFF] border border-[#E5DFD1] rounded-xl py-3 pl-11 pr-4 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-[#2A3319]/20 focus:border-[#2A3319] transition-all duration-300 text-[#2A3319] placeholder:text-[#2A3319]/30"
-                          />
-                          <Phone className="absolute left-4 top-3.5 w-4 h-4 text-[#2A3319]/40" />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] tracking-widest uppercase font-bold text-[#4A4A3A]/70">Password</label>
-                          <div className="relative shadow-sm rounded-xl">
+                      </form>
+                    ) : (
+                      <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3.5">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] tracking-wider uppercase font-bold text-[#4A4A3A]">Full Name</label>
+                          <div className="relative">
                             <input
-                              type="password"
+                              type="text"
                               required
-                              placeholder="••••••••"
-                              value={regPassword}
-                              onChange={(e) => setRegPassword(e.target.value)}
-                              className="w-full bg-[#FFFFFF] border border-[#E5DFD1] rounded-xl py-3 pl-11 pr-4 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-[#2A3319]/20 focus:border-[#2A3319] transition-all duration-300 text-[#2A3319] placeholder:text-[#2A3319]/30"
+                              placeholder="Mithila Kumar"
+                              value={regFullName}
+                              onChange={(e) => setRegFullName(e.target.value)}
+                              className="w-full bg-white border border-outline-variant/30 rounded-2xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#7C8464]/20 focus:border-[#7C8464] transition-all duration-300 text-on-surface"
                             />
-                            <Lock className="absolute left-4 top-3.5 w-4 h-4 text-[#2A3319]/40" />
+                            <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60" />
                           </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] tracking-widest uppercase font-bold text-[#4A4A3A]/70">Confirm</label>
-                          <div className="relative shadow-sm rounded-xl">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] tracking-wider uppercase font-bold text-[#4A4A3A]">Email Address</label>
+                          <div className="relative">
                             <input
-                              type="password"
+                              type="email"
                               required
-                              placeholder="••••••••"
-                              value={regConfirmPassword}
-                              onChange={(e) => setRegConfirmPassword(e.target.value)}
-                              className="w-full bg-[#FFFFFF] border border-[#E5DFD1] rounded-xl py-3 pl-11 pr-3 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-[#2A3319]/20 focus:border-[#2A3319] transition-all duration-300 text-[#2A3319] placeholder:text-[#2A3319]/30"
+                              placeholder="name@email.com"
+                              value={regEmail}
+                              onChange={(e) => setRegEmail(e.target.value)}
+                              className="w-full bg-white border border-outline-variant/30 rounded-2xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#7C8464]/20 focus:border-[#7C8464] transition-all duration-300 text-on-surface"
                             />
-                            <Lock className="absolute left-4 top-3.5 w-4 h-4 text-[#2A3319]/40" />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60" />
                           </div>
                         </div>
-                      </div>
 
-                      <button
-                        type="submit"
-                        disabled={authLoading}
-                        className="w-full bg-[#143A2A] hover:bg-[#0E281C] text-[#FAF8F4] h-12 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg active:scale-[0.98] mt-4 cursor-pointer"
-                      >
-                        {authLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            Create Account
-                            <ArrowRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </button>
-                    </form>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] tracking-wider uppercase font-bold text-[#4A4A3A]">Phone Number</label>
+                          <div className="relative">
+                            <input
+                              type="tel"
+                              required
+                              placeholder="+91 XXXXX XXXXX"
+                              value={regMobile}
+                              onChange={(e) => setRegMobile(e.target.value)}
+                              className="w-full bg-white border border-outline-variant/30 rounded-2xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#7C8464]/20 focus:border-[#7C8464] transition-all duration-300 text-on-surface"
+                            />
+                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60" />
+                          </div>
+                        </div>
 
-                    <div className="text-center pt-2">
-                      <span className="text-sm font-sans text-[#4A4A3A]/70">Already have an account? </span>
-                      <button
-                        onClick={() => setIsLogin(true)}
-                        className="text-sm font-sans font-semibold text-[#143A2A] hover:text-[#D4AF37] transition-colors cursor-pointer"
-                      >
-                        Sign In
-                      </button>
-                    </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] tracking-wider uppercase font-bold text-[#4A4A3A]">Password</label>
+                            <div className="relative">
+                              <input
+                                type="password"
+                                required
+                                placeholder="••••••••"
+                                value={regPassword}
+                                onChange={(e) => setRegPassword(e.target.value)}
+                                className="w-full bg-white border border-outline-variant/30 rounded-2xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#7C8464]/20 focus:border-[#7C8464] transition-all duration-300 text-on-surface"
+                              />
+                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60" />
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] tracking-wider uppercase font-bold text-[#4A4A3A]">Confirm</label>
+                            <div className="relative">
+                              <input
+                                type="password"
+                                required
+                                placeholder="••••••••"
+                                value={regConfirmPassword}
+                                onChange={(e) => setRegConfirmPassword(e.target.value)}
+                                className="w-full bg-white border border-outline-variant/30 rounded-2xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-[#7C8464]/20 focus:border-[#7C8464] transition-all duration-300 text-on-surface"
+                              />
+                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={authLoading}
+                          className="w-full bg-[#143A2A] hover:bg-[#0E281C] text-white h-[50px] rounded-full text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-95 shadow-lg mt-2 cursor-pointer"
+                        >
+                          {authLoading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              Create Account
+                              <ArrowRight className="w-5 h-5" />
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    )}
                   </div>
-                </motion.div>
-              )}
+
+                  <div className="text-center mt-[20px] text-sm text-on-surface-variant/80">
+                    <span>{isLogin ? "Don't have an account? " : "Already have an account? "}</span>
+                    <button
+                      onClick={() => setIsLogin(!isLogin)}
+                      className="text-secondary font-bold hover:underline cursor-pointer"
+                    >
+                      {isLogin ? "Create Account" : "Sign In"}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             </AnimatePresence>
           </div>
         </div>

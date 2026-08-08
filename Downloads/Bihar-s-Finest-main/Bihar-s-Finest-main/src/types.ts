@@ -23,6 +23,7 @@ export interface Product {
   reviews: Review[];
   isBestseller?: boolean;
   isNew?: boolean;
+  amazonUrl?: string;
   stock?: number;
   tagline?: string;
   nutritionalInfo?: {
@@ -80,4 +81,4 @@ export interface User {
   savedAddresses?: string[];
 }
 
-export type ScreenType = 'home' | 'shop' | 'details' | 'bulk' | 'contact' | 'about' | 'blog' | 'privacy-policy' | 'terms-conditions' | 'shipping-policy' | 'return-refund' | 'auth' | 'admin-login' | 'admin-dashboard' | 'faq' | 'track-order';
+export type ScreenType = 'home' | 'shop' | 'details' | 'bulk' | 'contact' | 'about' | 'blog' | 'privacy-policy' | 'terms-conditions' | 'shipping-policy' | 'return-refund' | 'auth' | 'admin-login' | 'admin-dashboard' | 'faq' | 'track-order' | 'account' | 'orders';

@@ -83,11 +83,11 @@ export default function BulkScreen({ onSubmitInquiry }: BulkScreenProps) {
 
   const handleWhatsAppChat = () => {
     const text = encodeURIComponent("Hello Bihar Bite! We are interested in bulk importing premium graded Makhana. Please share catalogs and details.");
-    window.open(`https://wa.me/919999999999?text=${text}`, '_blank');
+    window.open(`https://wa.me/917985347849?text=${text}`, '_blank');
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 font-sans">
+    <div id="hero" className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 font-sans">
       
       {/* Page Header */}
       <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
@@ -161,7 +161,7 @@ export default function BulkScreen({ onSubmitInquiry }: BulkScreenProps) {
                 WhatsApp Direct Trade
               </button>
               <a 
-                href="mailto:trade@biharbite.com"
+                href="mailto:info@biharbite.com"
                 className="bg-primary-container text-white border border-white/20 font-semibold text-xs px-5 py-2.5 rounded-full hover:bg-white/10 transition-all flex items-center gap-1.5"
               >
                 <Mail className="w-4 h-4" />

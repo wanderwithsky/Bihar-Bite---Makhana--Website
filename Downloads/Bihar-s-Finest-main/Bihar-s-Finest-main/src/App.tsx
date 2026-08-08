@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import HomeScreen from './components/HomeScreen';
 import ShopScreen from './components/ShopScreen';
@@ -8,6 +8,7 @@ import DetailsScreen from './components/DetailsScreen';
 import BulkScreen from './components/BulkScreen';
 import ContactScreen from './components/ContactScreen';
 import AboutScreen from './components/AboutScreen';
+import OurStoryScreen from './components/OurStoryScreen';
 import BlogScreen from './components/BlogScreen';
 import PrivacyPolicyScreen from './components/PrivacyPolicyScreen';
 import TermsConditionsScreen from './components/TermsConditionsScreen';
@@ -22,11 +23,13 @@ import UserAuthScreen from './components/UserAuthScreen';
 import AdminLoginScreen from './components/AdminLoginScreen';
 import AdminLayout from './components/admin/AdminLayout';
 import FAQScreen from './components/FAQScreen';
+import ScrollToTop from './components/ScrollToTop';
 import TrackOrderScreen from './components/TrackOrderScreen';
+import AccountScreen from './components/AccountScreen';
+import OrdersScreen from './components/OrdersScreen';
 import { Product, CartItem, ScreenType, User, Order } from './types';
 import { 
   isSupabaseConfigured, 
-  fetchProducts, 
   supabase, 
   fetchUserProfile, 
   createOrderInDb,
@@ -36,11 +39,33 @@ import {
   updateProductInDb,
   deleteProductFromDb
 } from './lib/supabase';
+import { productsData } from './products';
 
 export default function App() {
-  const [currentScreen, setScreen] = useState<ScreenType>(() =>
-    window.location.pathname.startsWith('/admin') ? 'admin-dashboard' : 'home'
-  );
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Adapter for components still expecting setScreen
+  const setScreen = (screen: ScreenType) => {
+    switch (screen) {
+      case 'home': navigate('/'); break;
+      case 'shop': navigate('/shop'); break;
+      case 'details': navigate('/details'); break;
+      case 'bulk': navigate('/bulk'); break;
+      case 'contact': navigate('/contact'); break;
+      case 'about': navigate('/about'); break;
+      case 'blog': navigate('/blog'); break;
+      case 'privacy-policy': navigate('/privacy-policy'); break;
+      case 'terms-conditions': navigate('/terms-and-conditions'); break;
+      case 'shipping-policy': navigate('/shipping-policy'); break;
+      case 'return-refund': navigate('/return-refund-policy'); break;
+      case 'faq': navigate('/faqs'); break;
+      case 'track-order': navigate('/track-order'); break;
+      case 'admin-login': navigate('/admin'); break;
+      case 'admin-dashboard': navigate('/admin'); break;
+      default: navigate('/'); break;
+    }
+  };
   const [selectedCategory, setSelectedCategory] = useState<Product['category'] | 'All'>('All');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
@@ -51,15 +76,15 @@ export default function App() {
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [pendingBuyNow, setPendingBuyNow] = useState<{ product: Product, selectedWeight: string, quantity: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Global Toast Notifications
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // --- DYNAMIC DATABASE STATES ---
-  const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
-  const [productsError, setProductsError] = useState<string | null>(null);
+  // Using local products.ts
+  const catalogProducts = productsData;
   const [users, setUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   
@@ -148,36 +173,9 @@ export default function App() {
   // Load database structures on startup
   useEffect(() => {
     const loadStartupData = async () => {
-      // 1. Products (fetch dynamically from Supabase)
-      setProductsLoading(true);
-      setProductsError(null);
-      try {
-        const fetched = await fetchProducts();
-        if (fetched && fetched.length > 0) {
-          setCatalogProducts(fetched);
-          try {
-            localStorage.setItem('bihar_bite_catalog', JSON.stringify(fetched));
-          } catch (cacheErr) {
-            console.warn('Could not cache products to localStorage (likely quota exceeded):', cacheErr);
-          }
-        } else {
-          setCatalogProducts([]);
-          setProductsError('No active products found in the database catalog.');
-        }
-      } catch (err: any) {
-        console.error('Failed to load products from Supabase:', err);
-        setProductsError(err.message || 'Failed to connect to the database catalog.');
-        const savedProducts = localStorage.getItem('bihar_bite_catalog');
-        if (savedProducts) {
-          setCatalogProducts(JSON.parse(savedProducts));
-        } else {
-          setCatalogProducts([]);
-        }
-      } finally {
-        setProductsLoading(false);
-      }
-
-      // 2. Users fallback
+      // (Products are now loaded synchronously from productsData)
+      
+      // 2. Fetch User Sessions fallback
       const savedUsers = localStorage.getItem('bihar_bite_users');
       if (savedUsers) {
         setUsers(JSON.parse(savedUsers));
@@ -226,22 +224,11 @@ export default function App() {
     loadStartupData();
   }, []);
 
-  // Keep the browser URL in sync with admin vs. storefront screens, so the
-  // admin panel is only reachable by visiting /admin directly.
+  // Custom event listener for components that don't have direct access to setIsWishlistOpen
   useEffect(() => {
-    const isAdminScreen = currentScreen === 'admin-login' || currentScreen === 'admin-dashboard';
-    const desiredPath = isAdminScreen ? '/admin' : '/';
-    if (window.location.pathname !== desiredPath) {
-      window.history.pushState({}, '', desiredPath);
-    }
-  }, [currentScreen]);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      setScreen(window.location.pathname.startsWith('/admin') ? 'admin-dashboard' : 'home');
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    const handleOpenWishlist = () => setIsWishlistOpen(true);
+    window.addEventListener('open-wishlist', handleOpenWishlist);
+    return () => window.removeEventListener('open-wishlist', handleOpenWishlist);
   }, []);
 
   // Handle Auth Modal Body Scroll Lock and ESC Key
@@ -251,6 +238,7 @@ export default function App() {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           setIsAuthModalOpen(false);
+          setPendingBuyNow(null);
         }
       };
       window.addEventListener('keydown', handleKeyDown);
@@ -330,6 +318,30 @@ export default function App() {
     });
 
     showToast(`Added ${quantity}x ${product.name} (${selectedWeight}) to basket!`, 'success');
+  };
+
+  const handleRequireAuthForBuyNow = (product: Product, selectedWeight: string, quantity: number) => {
+    if (currentUser) {
+      handleAddToCart(product, selectedWeight, quantity);
+      setIsCartOpen(true);
+    } else {
+      setPendingBuyNow({ product, selectedWeight, quantity });
+      setIsAuthModalOpen(true);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser && pendingBuyNow) {
+      handleAddToCart(pendingBuyNow.product, pendingBuyNow.selectedWeight, pendingBuyNow.quantity);
+      setPendingBuyNow(null);
+      setIsAuthModalOpen(false);
+      setIsCartOpen(true);
+    }
+  }, [currentUser, pendingBuyNow, navigate]);
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
+    setPendingBuyNow(null);
   };
 
   const handleUpdateQuantity = (productId: string, weight: string, newQuantity: number) => {
@@ -522,7 +534,7 @@ Message: ${details.message}`;
   };
 
   const handleSearchSubmit = () => {
-    setScreen('shop');
+    navigate('/shop');
   };
 
   // --- REGULAR USER SIGN IN / REGISTER FLOWS ---
@@ -532,7 +544,7 @@ Message: ${details.message}`;
       setCurrentUser(userObj);
       localStorage.setItem('bihar_bite_user_session', JSON.stringify(userObj));
       showToast(`Welcome back, ${userObj.fullName}!`, 'success');
-      setScreen('home');
+      navigate('/');
       return;
     }
 
@@ -552,7 +564,7 @@ Message: ${details.message}`;
     setCurrentUser(existing);
     localStorage.setItem('bihar_bite_user_session', JSON.stringify(existing));
     showToast(`Welcome back, ${existing.fullName}!`, 'success');
-    setScreen('home');
+    navigate('/');
   };
 
   const handleUserRegister = (fullNameOrUser: string | User, email?: string, mobile?: string) => {
@@ -561,7 +573,7 @@ Message: ${details.message}`;
       setCurrentUser(userObj);
       localStorage.setItem('bihar_bite_user_session', JSON.stringify(userObj));
       showToast('Registration complete. Welcome to Bihar Bite!', 'success');
-      setScreen('home');
+      navigate('/');
       return;
     }
 
@@ -587,7 +599,7 @@ Message: ${details.message}`;
     setCurrentUser(newUser);
     localStorage.setItem('bihar_bite_user_session', JSON.stringify(newUser));
     showToast('Registration complete. Welcome to Bihar Bite!', 'success');
-    setScreen('home');
+    navigate('/');
   };
 
   const handleUserLogout = async () => {
@@ -603,7 +615,7 @@ Message: ${details.message}`;
     localStorage.removeItem('bihar_bite_user_session');
     localStorage.removeItem('bihar_bite_admin_session');
     showToast('Signed out of terminal safely.', 'success');
-    setScreen('home');
+    navigate('/');
   };
 
   // --- ADMIN PORTAL LOGIN / CONTROLS ---
@@ -611,7 +623,7 @@ Message: ${details.message}`;
     const session = { email, name };
     setCurrentAdmin(session);
     localStorage.setItem('bihar_bite_admin_session', JSON.stringify(session));
-    setScreen('admin-dashboard');
+    navigate('/admin');
   };
 
   const handleAddProduct = async (newProduct: Product) => {
@@ -697,15 +709,16 @@ Message: ${details.message}`;
     }
   };
 
-  const isAdminScreen = currentScreen === 'admin-login' || currentScreen === 'admin-dashboard';
+  const isAdminScreen = location.pathname.startsWith('/admin');
 
   return (
     <div className="min-h-screen bg-background text-on-background flex flex-col font-sans selection:bg-secondary-container selection:text-on-secondary-container antialiased">
+      <ScrollToTop />
       
       {/* Header element (storefront only — admin has its own dedicated header) */}
       {!isAdminScreen && (
         <Header
-          currentScreen={currentScreen}
+          currentScreen={'home'} // Kept for type compatibility temporarily
           setScreen={setScreen}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
@@ -727,16 +740,8 @@ Message: ${details.message}`;
       {/* Main app screens section */}
       <main className="flex-grow">
         {isAdminScreen ? (
-          <>
-            {currentScreen === 'admin-login' && (
-              <AdminLoginScreen
-                onAdminLogin={handleAdminLogin}
-                setScreen={setScreen}
-                showToast={showToast}
-              />
-            )}
-
-            {currentScreen === 'admin-dashboard' && (
+          <Routes>
+            <Route path="/admin" element={
               currentAdmin ? (
                 <AdminLayout
                   products={catalogProducts}
@@ -760,63 +765,20 @@ Message: ${details.message}`;
                   showToast={showToast}
                 />
               )
-            )}
-          </>
-        ) : productsLoading ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] pt-[180px] px-6">
-            <div className="relative w-16 h-16 mb-6">
-              <div className="absolute inset-0 border-4 border-[#7C8464]/10 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-t-[#7C8464] border-r-[#7C8464]/40 rounded-full animate-spin"></div>
-            </div>
-            <p className="font-serif italic text-primary text-lg animate-pulse text-[#4A4A3A]">Sourcing the finest Fox Nuts...</p>
-            <p className="text-xs text-on-surface-variant/60 mt-1">Authentic Bihar heritage is worth the wait</p>
-          </div>
-        ) : productsError && catalogProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] pt-[180px] px-6 text-center max-w-md mx-auto">
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h3 className="font-serif text-xl text-primary mb-2">Temporary Connection Issue</h3>
-            <p className="text-sm text-on-surface-variant mb-6">{productsError}</p>
-            <button 
-              onClick={() => {
-                const retryFetch = async () => {
-                  setProductsLoading(true);
-                  setProductsError(null);
-                  try {
-                    const fetched = await fetchProducts();
-                    if (fetched && fetched.length > 0) {
-                      setCatalogProducts(fetched);
-                    } else {
-                      setProductsError('No active products found.');
-                    }
-                  } catch (err: any) {
-                    setProductsError(err.message || 'Database connection error.');
-                  } finally {
-                    setProductsLoading(false);
-                  }
-                };
-                retryFetch();
-              }}
-              className="bg-primary text-white px-6 py-2.5 rounded-full text-xs font-semibold hover:bg-primary/95 transition-all shadow-sm"
-            >
-              Retry Connection
-            </button>
-          </div>
+            } />
+          </Routes>
         ) : (
-          <>
-            {currentScreen === 'home' && (
+          <Routes>
+            <Route path="/" element={
               <HomeScreen
                 setScreen={setScreen}
                 setSelectedCategory={setSelectedCategory}
                 setSelectedProduct={setSelectedProduct}
                 products={catalogProducts}
               />
-            )}
+            } />
 
-            {currentScreen === 'shop' && (
+            <Route path="/shop" element={
               <ShopScreen
                 setScreen={setScreen}
                 selectedCategory={selectedCategory}
@@ -828,62 +790,59 @@ Message: ${details.message}`;
                 onAddToCart={handleAddToCart}
                 searchQuery={searchQuery}
               />
-            )}
+            } />
 
-            {currentScreen === 'details' && selectedProduct && (
+            <Route path="/details" element={<Navigate to="/shop" replace />} />
+            
+            <Route path="/product/:slug" element={
               <DetailsScreen
                 setScreen={setScreen}
-                product={selectedProduct}
+                product={selectedProduct as any} // Keeping to satisfy old type temporarily, but will be ignored
                 setSelectedProduct={setSelectedProduct}
                 products={catalogProducts}
                 wishlist={wishlist}
                 onToggleWishlist={handleToggleWishlist}
                 onAddToCart={handleAddToCart}
+                setNotification={setNotification}
+                onBuyNowAuthFlow={handleRequireAuthForBuyNow}
+                currentUser={currentUser}
+                setIsCartOpen={setIsCartOpen}
               />
-            )}
+            } />
 
-            {currentScreen === 'bulk' && (
-              <BulkScreen onSubmitInquiry={handleInquirySubmit} />
-            )}
-
-            {currentScreen === 'contact' && (
-              <ContactScreen onSubmitContact={handleContactSubmit} />
-            )}
-
-            {currentScreen === 'about' && (
-              <AboutScreen />
-            )}
-
-            {currentScreen === 'blog' && (
-              <BlogScreen />
-            )}
-
-            {currentScreen === 'privacy-policy' && (
-              <PrivacyPolicyScreen setScreen={setScreen} />
-            )}
-
-            {currentScreen === 'terms-conditions' && (
-              <TermsConditionsScreen setScreen={setScreen} />
-            )}
-
-            {currentScreen === 'shipping-policy' && (
-              <ShippingPolicyScreen setScreen={setScreen} />
-            )}
-
-            {currentScreen === 'return-refund' && (
-              <ReturnRefundScreen setScreen={setScreen} />
-            )}
-
-            {currentScreen === 'faq' && (
-              <FAQScreen setScreen={setScreen} />
-            )}
-
-            {currentScreen === 'track-order' && (
-              <TrackOrderScreen setScreen={setScreen} orders={orders} />
-            )}
-
-            {/* Removed inline auth screen */}
-          </>
+            <Route path="/bulk" element={<BulkScreen onSubmitInquiry={handleInquirySubmit} />} />
+            <Route path="/contact" element={<ContactScreen onSubmitContact={handleContactSubmit} />} />
+            <Route path="/about" element={<AboutScreen />} />
+            <Route path="/our-story" element={<OurStoryScreen />} />
+            <Route path="/blog" element={<BlogScreen />} />
+            
+            <Route path="/privacy-policy" element={<PrivacyPolicyScreen setScreen={setScreen} />} />
+            <Route path="/terms-conditions" element={<TermsConditionsScreen setScreen={setScreen} />} />
+            <Route path="/terms-and-conditions" element={<Navigate to="/terms-conditions" replace />} />
+            <Route path="/shipping-policy" element={<ShippingPolicyScreen setScreen={setScreen} />} />
+            <Route path="/return-refund-policy" element={<ReturnRefundScreen setScreen={setScreen} />} />
+            <Route path="/faqs" element={<FAQScreen setScreen={setScreen} />} />
+            <Route path="/track-order" element={<TrackOrderScreen setScreen={setScreen} orders={orders} />} />
+            
+            <Route path="/account" element={
+              <AccountScreen 
+                currentUser={currentUser} 
+                onLogout={handleUserLogout}
+                wishlistCount={wishlist.length}
+                orders={orders.filter(o => o.customerEmail === currentUser?.email || o.customerMobile === currentUser?.mobile)}
+                onOpenAuthModal={() => setIsAuthModalOpen(true)}
+              />
+            } />
+            <Route path="/account/orders" element={
+              <OrdersScreen 
+                currentUser={currentUser}
+                orders={orders.filter(o => o.customerEmail === currentUser?.email || o.customerMobile === currentUser?.mobile)}
+                onOpenAuthModal={() => setIsAuthModalOpen(true)}
+              />
+            } />
+            
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         )}
       </main>
 
@@ -894,29 +853,30 @@ Message: ${details.message}`;
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 pointer-events-auto"
-            style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(16px)' }}
-            onClick={() => setIsAuthModalOpen(false)}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="fixed inset-0 z-[9998] flex items-center justify-center pointer-events-auto"
+            style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)' }}
+            onClick={closeAuthModal}
           >
             <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ duration: 0.45, ease: 'easeOut' }}
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#FDFBF7] w-full md:w-[1080px] h-[90vh] md:h-[640px] max-w-[100vw] md:max-w-[90vw] md:max-h-[88vh] overflow-hidden rounded-t-[32px] md:rounded-[32px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-white/20 relative flex flex-col"
+              className="bg-[#FDFBF7] w-[calc(100vw-48px)] md:w-[calc(100vw-100px)] max-w-[1180px] max-h-[calc(100vh-48px)] md:max-h-[calc(100vh-100px)] overflow-hidden rounded-[32px] md:rounded-[32px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-white/20 relative flex flex-col shrink-0 z-[9999]"
             >
-              <button
-                onClick={() => setIsAuthModalOpen(false)}
-                className="absolute top-6 right-6 z-50 w-10 h-10 bg-black/5 hover:bg-black/10 rounded-full flex items-center justify-center transition-colors"
-              >
-                <X className="w-5 h-5 text-stone-600" />
-              </button>
+                <button
+                  onClick={closeAuthModal}
+                  className="absolute top-6 right-6 z-50 w-10 h-10 bg-black/5 hover:bg-black/10 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <svg className="w-5 h-5 text-stone-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
               <div className="flex-1 w-full overflow-hidden relative">
                 <UserAuthScreen
                   currentUser={currentUser}
-                  onLogin={(emailOrUser, fullName, mobile) => {
-                    handleUserLogin(emailOrUser, fullName, mobile);
+                  onLogin={(emailOrUser) => {
+                    handleUserLogin(emailOrUser);
                     setIsAuthModalOpen(false);
                   }}
                   onRegister={(fullNameOrUser, email, mobile) => {

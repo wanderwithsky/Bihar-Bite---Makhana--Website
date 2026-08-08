@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Star, Heart, SlidersHorizontal, Search, ShoppingBag, Grid, ArrowUpDown } from 'lucide-react';
 import { Product, ScreenType } from '../types';
 
@@ -25,11 +26,12 @@ export default function ShopScreen({
   onAddToCart,
   searchQuery,
 }: ShopScreenProps) {
+  const navigate = useNavigate();
   // Local state for sidebar filters
   const [localCategory, setLocalCategory] = useState<Product['category'] | 'All'>(selectedCategory);
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [selectedPackSizes, setSelectedPackSizes] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState<number>(1000);
+  const [maxPrice, setMaxPrice] = useState<number>(2000);
   const [sortBy, setSortBy] = useState<string>('featured');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
   const [cardSelectedWeights, setCardSelectedWeights] = useState<{ [productId: string]: string }>({});
@@ -43,7 +45,7 @@ export default function ShopScreen({
   useEffect(() => {
     const defaults: { [productId: string]: string } = {};
     products.forEach((p) => {
-      defaults[p.id] = p.weights[0];
+      defaults[(p as any).slug || p.id] = p.weights?.[0] || (p as any).weight || '100g';
     });
     setCardSelectedWeights(defaults);
   }, [products]);
@@ -74,10 +76,15 @@ export default function ShopScreen({
     setSelectedCategory('All');
     setSelectedFlavors([]);
     setSelectedPackSizes([]);
-    setMaxPrice(1000);
+    setMaxPrice(2000);
   };
 
   // Filtering & Sorting Logic
+  console.log("=== FILTERING STARTED ===");
+  console.log("Selected Category:", localCategory);
+  console.log("Selected Pack Sizes:", selectedPackSizes);
+  console.log("All Products Data:", products);
+  
   const filteredProducts = products.filter((product) => {
     // 1. Category filter
     if (localCategory !== 'All' && product.category !== localCategory) {
@@ -90,26 +97,44 @@ export default function ShopScreen({
       const matchesSearch =
         product.name.toLowerCase().includes(q) ||
         product.description.toLowerCase().includes(q) ||
-        product.flavors.some((f) => f.toLowerCase().includes(q));
+        ((product as any).flavors || []).some((f: string) => f.toLowerCase().includes(q));
       if (!matchesSearch) return false;
     }
 
     // 3. Flavors filter
     if (selectedFlavors.length > 0) {
-      const hasSelectedFlavor = product.flavors.some((f) => selectedFlavors.includes(f));
+      const hasSelectedFlavor = ((product as any).flavors || []).some((f: string) => selectedFlavors.includes(f));
       if (!hasSelectedFlavor) return false;
     }
 
     // 4. Pack sizes filter
     if (selectedPackSizes.length > 0) {
-      const hasSelectedSize = product.weights.some((w) => selectedPackSizes.includes(w));
-      if (!hasSelectedSize) return false;
+      const normalizeWeight = (s: string | undefined) => {
+        if (!s) return '';
+        let str = String(s).toLowerCase().replace(/[\s-]/g, '');
+        if (str === '1000g') str = '1kg';
+        return str;
+      };
+        
+      const productWeights = product.weights || [(product as any).weight || '100g'];
+      const hasSelectedSize = productWeights.some((w) => 
+        selectedPackSizes.some((selected) => {
+          const match = normalizeWeight(selected) === normalizeWeight(w);
+          console.log(`[Filter Check] Product: ${product.name}, Selected: '${selected}' -> '${normalizeWeight(selected)}', Product Weight: '${w}' -> '${normalizeWeight(w)}', Match: ${match}`);
+          return match;
+        })
+      );
+      if (!hasSelectedSize) {
+         console.log(`[Filter Excluded] Product: ${product.name} excluded due to pack size mismatch.`);
+         return false;
+      }
     }
 
     // 5. Price filter
-    const activeWeight = cardSelectedWeights[product.id] || product.weights[0];
-    const activePrice = product.weightPrices[activeWeight] || product.price;
+    const activeWeight = cardSelectedWeights[(product as any).slug || product.id] || product.weights?.[0] || (product as any).weight || '100g';
+    const activePrice = (product as any).weightPrices?.[activeWeight] || product.price;
     if (activePrice > maxPrice) {
+      console.log(`[Filter Excluded] Product: ${product.name} excluded. Price ₹${activePrice} > Max ₹${maxPrice}`);
       return false;
     }
 
@@ -118,24 +143,28 @@ export default function ShopScreen({
 
   // Sorting
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    const aWeight = cardSelectedWeights[a.id] || a.weights[0];
-    const bWeight = cardSelectedWeights[b.id] || b.weights[0];
-    const aPrice = a.weightPrices[aWeight] || a.price;
-    const bPrice = b.weightPrices[bWeight] || b.price;
+    const aWeight = cardSelectedWeights[(a as any).slug || a.id] || a.weights?.[0] || (a as any).weight || '100g';
+    const bWeight = cardSelectedWeights[(b as any).slug || b.id] || b.weights?.[0] || (b as any).weight || '100g';
+    const aPrice = (a as any).weightPrices?.[aWeight] || a.price;
+    const bPrice = (b as any).weightPrices?.[bWeight] || b.price;
 
     if (sortBy === 'price-low') return aPrice - bPrice;
     if (sortBy === 'price-high') return bPrice - aPrice;
-    if (sortBy === 'rating') return b.rating - a.rating;
+    if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
     if (sortBy === 'newest') return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
     return 0; // Default Featured
   });
 
+  console.log("Filtered Products Result:", filteredProducts);
+  console.log("Sorted Products Result:", sortedProducts);
+  console.log("=== FILTERING ENDED ===");
+
   const availableFlavors = Array.from(
-    new Set(products.flatMap((p) => p.flavors))
+    new Set(products.flatMap((p) => (p as any).flavors || []))
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 grid grid-cols-1 lg:grid-cols-12 gap-8 font-sans">
+    <div id="hero" className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 grid grid-cols-1 lg:grid-cols-12 gap-8 font-sans">
       
       {/* Mobile Filters Header */}
       <div className="col-span-12 lg:hidden flex justify-between items-center bg-white p-4 rounded-xl border border-outline-variant/30">
@@ -228,7 +257,7 @@ export default function ShopScreen({
           <div className="space-y-2 pt-4 border-t border-outline-variant/10">
             <h4 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Pack Sizes</h4>
             <div className="grid grid-cols-2 gap-2">
-              {['100g', '250g', '500g', '1kg'].map((size) => {
+              {['100g', '200g', '250g', '500g', '1 KG', 'Bulk'].map((size) => {
                 const isSelected = selectedPackSizes.includes(size);
                 return (
                   <button
@@ -256,7 +285,7 @@ export default function ShopScreen({
             <input 
               type="range"
               min={100}
-              max={1000}
+              max={2000}
               step={50}
               value={maxPrice}
               onChange={(e) => setMaxPrice(Number(e.target.value))}
@@ -306,28 +335,40 @@ export default function ShopScreen({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {sortedProducts.map((product) => {
-              const activeWeight = cardSelectedWeights[product.id] || product.weights[0];
-              const activePrice = product.weightPrices[activeWeight] || product.price;
-              const isSaved = wishlist.some((item) => item.id === product.id);
+              const activeWeight = cardSelectedWeights[(product as any).slug || product.id] || product.weights?.[0] || (product as any).weight || '100g';
+              const activePrice = (product as any).weightPrices?.[activeWeight] || product.price;
+              const isSaved = wishlist.some((item) => item.id === ((product as any).slug || product.id));
+
+              const coverImage = (product as any).images?.[0] || product.image || '/images/01.png';
 
               return (
                 <div 
-                  key={product.id}
+                  key={(product as any).slug || product.id}
                   className="bg-white rounded-2xl border border-outline-variant/20 shadow-sm flex flex-col justify-between overflow-hidden group/card relative hover:border-secondary transition-all duration-300 h-full"
                 >
                   {/* Image, Badges & Wishlist Trigger */}
                   <div className="aspect-square bg-surface-container-low overflow-hidden relative cursor-pointer">
-                    <img 
-                      src={product.image} 
-                      alt={product.name} 
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        setScreen('details');
-                      }}
-                      className="w-full h-full object-cover group-hover/card:scale-102 transition-transform duration-500" 
-                    />
+                    {(product as any).video ? (
+                      <video
+                        src={(product as any).video}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        className="w-full h-full object-cover group-hover/card:scale-102 transition-transform duration-500"
+                        onClick={() => navigate(`/product/${(product as any).slug || product.id}`)}
+                      />
+                    ) : (
+                      <img 
+                        src={coverImage} 
+                        alt={product.name} 
+                        onClick={() => navigate(`/product/${(product as any).slug || product.id}`)}
+                        className="w-full h-full object-cover group-hover/card:scale-102 transition-transform duration-500" 
+                      />
+                    )}
                     
                     {/* Bestseller or New tags */}
                     {product.isBestseller && (
@@ -359,19 +400,16 @@ export default function ShopScreen({
                     <div>
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">
-                          {product.category}
+                          {(product as any).category || 'Featured'}
                         </span>
                         <div className="flex items-center text-secondary-container">
                           <Star className="w-3 h-3 fill-secondary-container" />
-                          <span className="text-xs font-bold text-primary ml-1">{product.rating}</span>
+                          <span className="text-xs font-bold text-primary ml-1">{product.rating || 5.0}</span>
                         </div>
                       </div>
 
                       <h3 
-                        onClick={() => {
-                          setSelectedProduct(product);
-                          setScreen('details');
-                        }}
+                        onClick={() => navigate(`/product/${(product as any).slug || product.id}`)}
                         className="font-serif font-bold text-primary text-base hover:text-secondary cursor-pointer transition-colors leading-tight mb-1"
                       >
                         {product.name}
@@ -382,12 +420,12 @@ export default function ShopScreen({
 
                       {/* Card Weight Selector */}
                       <div className="flex flex-wrap gap-1 mt-3">
-                        {product.weights.map((wt) => {
+                        {(product.weights || [(product as any).weight || '100g']).map((wt) => {
                           const isSel = wt === activeWeight;
                           return (
                             <button
                               key={wt}
-                              onClick={() => handleWeightChange(product.id, wt)}
+                              onClick={() => handleWeightChange((product as any).slug || product.id, wt)}
                               className={`text-[10px] px-2 py-1 rounded transition-all ${
                                 isSel 
                                   ? 'bg-primary text-white font-bold' 
@@ -405,7 +443,7 @@ export default function ShopScreen({
                     <div className="flex justify-between items-center mt-4 pt-3 border-t border-outline-variant/10">
                       <div>
                         <span className="text-xs text-on-surface-variant block leading-none">Price</span>
-                        <span className="text-sm font-bold text-primary">₹{activePrice}</span>
+                        <span className="text-sm font-bold text-primary">{(product as any).priceDisplay || `₹${activePrice}`}</span>
                       </div>
                       <button
                         onClick={() => onAddToCart(product, activeWeight)}

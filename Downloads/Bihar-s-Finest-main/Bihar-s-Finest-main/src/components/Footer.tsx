@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { ArrowRight, Share2, Shield, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { ScreenType } from '../types';
 
 interface FooterProps {
@@ -22,25 +23,41 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
   };
 
   return (
-    <footer className="bg-primary text-white pt-16 pb-8 border-t border-primary-container mt-auto font-sans">
+    <footer className="relative bg-gradient-to-br from-[#143A2A] via-[#0E281C] to-[#0A1A12] text-white pt-16 pb-8 border-t border-[#C28E63]/20 mt-auto font-sans overflow-hidden">
       
+      {/* ─── AMBIENT FOOTER DECOR: BOTANICAL ILLUSTRATIONS ─── */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03]">
+        {/* Large Botanical Leaves Bottom Left */}
+        <svg className="absolute -bottom-20 -left-20 w-[400px] h-[400px] rotate-12" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M100 10C149.706 10 190 50.2944 190 100C190 149.706 149.706 190 100 190C50.2944 190 10 149.706 10 100C10 50.2944 50.2944 10 100 10Z" fill="#FAF8F4"/>
+          <path d="M100 10V100" stroke="#FAF8F4" strokeWidth="2" />
+        </svg>
+        {/* Large Botanical Leaves Bottom Right */}
+        <svg className="absolute -bottom-10 -right-32 w-[600px] h-[600px] -rotate-12" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M100 10C149.706 10 190 50.2944 190 100C190 149.706 149.706 190 100 190C50.2944 190 10 149.706 10 100C10 50.2944 50.2944 10 100 10Z" fill="#FAF8F4"/>
+          <path d="M100 10V100" stroke="#FAF8F4" strokeWidth="2" />
+        </svg>
+      </div>
+
       {/* Brand & Newsletter Header Row */}
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-12 border-b border-primary-container/30">
-        <div className="lg:col-span-5 space-y-4">
-          <h2 className="font-serif text-3xl font-extralight text-secondary-container cursor-pointer tracking-tight hover:opacity-95" onClick={() => setScreen('home')}>
-            Bihar <span className="italic font-normal">Bite</span>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-12 border-b border-white/10">
+        <div className="lg:col-span-5 space-y-4 text-center lg:text-left flex flex-col items-center lg:items-start">
+          <h2 className="font-serif text-3xl font-extralight text-secondary-container cursor-pointer tracking-tight hover:opacity-95">
+            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              Bihar <span className="italic font-normal">Bite</span>
+            </Link>
           </h2>
-          <p className="text-white/80 text-xs md:text-sm leading-relaxed max-w-md font-light">
+          <p className="text-white/80 text-xs md:text-sm leading-relaxed max-w-md mx-auto lg:mx-0 font-light">
             Cultivating Heritage, Delivering Purity. Sourcing premium, mineral-rich Euryale Ferox directly from the pristine waterlily wetlands of Mithila, Bihar. Freshly slow-roasted and graded to perfection.
           </p>
         </div>
         
-        <div className="lg:col-span-7 flex flex-col justify-center space-y-3">
+        <div className="lg:col-span-7 flex flex-col justify-center space-y-3 text-center lg:text-left items-center lg:items-start mt-8 lg:mt-0">
           <span className="text-xs font-semibold text-secondary-container tracking-widest uppercase">Subscribe to our Journal</span>
           <p className="text-xs text-white/70 max-w-md font-light">
             Stay updated on harvest cycles, gourmet recipes, exclusive discounts, and health news.
           </p>
-          <form onSubmit={handleSubmit} className="flex max-w-md w-full relative">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-0 max-w-md w-full relative">
             <input 
               type="email"
               required
@@ -48,12 +65,12 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
               disabled={subscribed}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-primary-container border-none text-white text-xs rounded-l-xl focus:ring-1 focus:ring-secondary-container px-4 py-3 placeholder-white/40 focus:outline-none font-light"
+              className="w-full bg-primary-container border-none text-white text-xs rounded-xl sm:rounded-r-none sm:rounded-l-xl focus:ring-1 focus:ring-secondary-container px-4 py-3 placeholder-white/40 focus:outline-none font-light"
             />
             <button 
               type="submit"
               disabled={subscribed}
-              className={`bg-secondary-container text-primary font-bold px-5 py-3 rounded-r-xl transition-all text-xs uppercase tracking-widest ${
+              className={`bg-secondary-container text-primary font-bold px-5 py-3 rounded-xl sm:rounded-l-none sm:rounded-r-xl transition-all text-xs uppercase tracking-widest min-h-[44px] ${
                 subscribed ? 'bg-green-500 text-white' : 'hover:bg-[#E5D7B3] active:scale-95'
               }`}
             >
@@ -68,7 +85,7 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
       </div>
 
       {/* Main Multi-Column Section */}
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-10">
+      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 text-center sm:text-left">
         
         {/* Column 1: Company */}
         <div className="space-y-4">
@@ -77,44 +94,29 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
           </h3>
           <ul className="space-y-2 text-xs md:text-sm text-white/80 font-light">
             <li>
-              <button onClick={() => {
-                setScreen('about');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4">
+              <Link to="/about" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4">
                 About Bihar Bite
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('about');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4">
+              <Link to="/our-story" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4">
                 Our Story & Heritage
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('contact');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4">
+              <Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4">
                 Contact Us
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('blog');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4">
+              <Link to="/blog" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4">
                 Our Journal & Blog
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('faq');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4">
+              <Link to="/faqs" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4">
                 FAQs
-              </button>
+              </Link>
             </li>
           </ul>
         </div>
@@ -126,44 +128,29 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
           </h3>
           <ul className="space-y-2 text-xs md:text-sm text-white/80 font-light">
             <li>
-              <button onClick={() => {
-                setScreen('shipping-policy');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4 text-left">
+              <Link to="/shipping-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4 block">
                 Shipping Policy
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('return-refund');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4 text-left">
+              <Link to="/return-refund-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4 block">
                 Return & Refund Policy
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('privacy-policy');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4 text-left">
+              <Link to="/privacy-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4 block text-left">
                 Privacy Policy
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('terms-conditions');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4 text-left">
+              <Link to="/terms-and-conditions" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4 block text-left">
                 Terms & Conditions
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('track-order');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4 text-left">
+              <Link to="/track-order" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4 block text-left">
                 Track Order
-              </button>
+              </Link>
             </li>
           </ul>
         </div>
@@ -175,36 +162,24 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
           </h3>
           <ul className="space-y-2 text-xs md:text-sm text-white/80 font-light">
             <li>
-              <button onClick={() => {
-                setScreen('bulk');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4">
+              <Link to="/bulk" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4 block text-left">
                 Bulk Orders
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('bulk');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4">
+              <Link to="/bulk" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4 block text-left">
                 Wholesale & HoReCa
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('bulk');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4">
+              <Link to="/bulk" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4 block text-left">
                 Export Solutions
-              </button>
+              </Link>
             </li>
             <li>
-              <button onClick={() => {
-                setScreen('contact');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} className="hover:text-white transition-colors hover:underline underline-offset-4">
+              <Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4 block text-left">
                 Become a Distributor
-              </button>
+              </Link>
             </li>
           </ul>
         </div>
@@ -216,33 +191,33 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
           </h3>
           <ul className="space-y-2 text-xs md:text-sm text-white/80 font-light">
             <li>
-              <a href="https://wa.me/919123456789" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
-                WhatsApp: +91 91234 56789
+              <a href="https://wa.me/917985347849?text=Hi+Bihar+Bite%21+I%27d+like+to+know+more+about+your+Makhana+products." target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
+                WhatsApp: +91 79853 47849
               </a>
             </li>
             <li>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
-                Instagram: @biharbite
+              <a href="https://instagram.com/bihar_biteofficial" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
+                Instagram: bihar_biteofficial
               </a>
             </li>
             <li>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
-                Facebook: /biharbite
+              <a href="https://www.facebook.com/Biharbiteofficial" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
+                Facebook: Biharbite Makhana
               </a>
             </li>
             <li>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
-                YouTube: Bihar Bite Channel
+              <a href="https://youtube.com/@biharbitemakhana?si=7na-GBWRa19EaZMA" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
+                YouTube: Biharbite Makhana
               </a>
             </li>
             <li>
-              <a href="mailto:care@biharbite.com" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
-                Email: care@biharbite.com
+              <a href="mailto:info@biharbite.com" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
+                Email: info@biharbite.com
               </a>
             </li>
             <li>
-              <a href="tel:+919123456789" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
-                Phone: +91 91234 56789
+              <a href="tel:+919336311140" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
+                Phone: +91 93363 11140
               </a>
             </li>
           </ul>

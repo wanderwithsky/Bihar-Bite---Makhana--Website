@@ -102,7 +102,7 @@ export default function BlogScreen() {
   const featuredPost = blogPosts[0];
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-24 font-sans">
+    <div id="hero" className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-24 font-sans">
       {selectedPost ? (
         // Full Article Detail View
         <article className="max-w-3.5xl mx-auto animate-fade-in">

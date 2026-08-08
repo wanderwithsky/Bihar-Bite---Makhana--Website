@@ -22,6 +22,8 @@ export default function CheckoutModal({
   onOrderSuccess,
   setScreen,
 }: CheckoutModalProps) {
+  const [navbarHeight, setNavbarHeight] = useState(0);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,6 +41,41 @@ export default function CheckoutModal({
   useEffect(() => {
     if (isOpen) {
       setIsAgreed(false);
+      
+      // Calculate navbar height automatically
+      const updateNavbarHeight = () => {
+        let height = 0;
+        
+        // Find the sticky header elements
+        const desktopHeader = document.querySelector('header.fixed');
+        const mobileHeader = document.querySelector('div.fixed.z-50.w-full');
+        
+        if (desktopHeader && window.getComputedStyle(desktopHeader).display !== 'none') {
+          height = desktopHeader.getBoundingClientRect().height;
+        } else if (mobileHeader && window.getComputedStyle(mobileHeader).display !== 'none') {
+          height = mobileHeader.getBoundingClientRect().height;
+        }
+        
+        // Also check if review ticker is visible and might push things down (if applicable)
+        const reviewTicker = document.querySelector('div.fixed.top-0.z-40');
+        let tickerHeight = 0;
+        if (reviewTicker && window.getComputedStyle(reviewTicker).display !== 'none') {
+           tickerHeight = reviewTicker.getBoundingClientRect().height;
+        }
+        
+        // Some headers might start below the review ticker, so we take the max or sum depending on layout,
+        // but typically the highest bottom coordinate of fixed elements at the top is the safe area.
+        const safeAreaTop = Math.max(height, tickerHeight, window.innerWidth >= 768 ? 72 : 64);
+        
+        setNavbarHeight(safeAreaTop);
+      };
+
+      updateNavbarHeight();
+      window.addEventListener('resize', updateNavbarHeight);
+      
+      return () => {
+        window.removeEventListener('resize', updateNavbarHeight);
+      };
     }
   }, [isOpen]);
 
@@ -60,19 +97,102 @@ export default function CheckoutModal({
   };
   const estDeliveryStr = `${formatDateStr(estStart)} - ${formatDateStr(estEnd)}`;
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!isAgreed) {
       alert('You must agree to the Terms & Conditions and Privacy Policy to proceed.');
       return;
     }
+    
+    if (formData.paymentMethod === 'cod') {
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setIsSuccess(true);
+      }, 1500);
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Simulate API processing
-    setTimeout(() => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      // Step 1: Create Order
+      const orderRes = await fetch(`${apiUrl}/payment/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: total * 100, // paise
+          customerName: formData.name,
+          customerEmail: formData.email,
+          customerPhone: formData.phone
+        })
+      });
+      
+      const orderData = await orderRes.json();
+      
+      if (!orderData.success) {
+        throw new Error(orderData.error || 'Failed to create order');
+      }
+
+      // Step 2: Open Razorpay Modal
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Bihar Bite",
+        description: "Premium Makhana Checkout",
+        order_id: orderData.order_id,
+        handler: async function (response: any) {
+          try {
+            // Step 3: Verify Signature
+            const verifyRes = await fetch(`${apiUrl}/payment/verify`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+            
+            const verifyData = await verifyRes.json();
+            
+            if (verifyData.success) {
+              setIsSuccess(true);
+            } else {
+              alert('Payment verification failed.');
+            }
+          } catch (err) {
+            console.error('Verify error:', err);
+            alert('Error verifying payment.');
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+        prefill: {
+          name: formData.name,
+          email: formData.email,
+          contact: formData.phone
+        },
+        theme: {
+          color: "#143A2A"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        alert('Payment failed: ' + response.error.description);
+        setIsSubmitting(false);
+      });
+      rzp.open();
+
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      alert('Error initializing payment. ' + error.message);
       setIsSubmitting(false);
-      setIsSuccess(true);
-    }, 1500);
+    }
   };
 
   const handleFinish = () => {
@@ -86,14 +206,20 @@ export default function CheckoutModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto custom-scrollbar font-sans">
+    <div 
+      className="fixed inset-0 z-[101] flex flex-col items-center p-4 overflow-y-auto custom-scrollbar font-sans"
+      style={{ 
+        paddingTop: `calc(${navbarHeight}px + 32px)`,
+        paddingBottom: '32px'
+      }}
+    >
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
         onClick={isSuccess ? undefined : onClose}
       />
 
-      <div className="relative bg-surface w-full max-w-2xl rounded-[28px] shadow-2xl overflow-hidden z-10 border border-outline-variant/30 flex flex-col max-h-[90vh]">
+      <div className="relative bg-surface w-full max-w-2xl rounded-[28px] shadow-2xl overflow-hidden z-10 border border-outline-variant/30 flex flex-col shrink-0 my-auto">
         
         {/* Header */}
         <div className="px-6 py-5 border-b border-outline-variant/30 flex items-center justify-between bg-white">

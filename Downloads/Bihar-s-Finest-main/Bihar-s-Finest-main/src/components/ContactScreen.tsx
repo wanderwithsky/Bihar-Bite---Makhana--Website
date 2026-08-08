@@ -89,18 +89,18 @@ export default function ContactScreen({ onSubmitContact }: ContactScreenProps) {
     {
       icon: <Mail className="w-5 h-5 text-secondary" />,
       title: 'Email Correspondence',
-      value: 'hello@biharbite.com',
+      value: 'info@biharbite.com',
       description: 'Our team responds within 12-24 hours.',
       actionText: 'Write to us',
-      link: 'mailto:hello@biharbite.com',
+      link: 'mailto:info@biharbite.com',
     },
     {
       icon: <Phone className="w-5 h-5 text-secondary" />,
       title: 'Direct Telephony',
-      value: '+91 98765 43210',
+      value: '+91 93363 11140',
       description: 'Mon-Sat from 9:00 AM to 6:00 PM IST.',
       actionText: 'Call now',
-      link: 'tel:+919876543210',
+      link: 'tel:+919336311140',
     },
     {
       icon: <MapPin className="w-5 h-5 text-secondary" />,
@@ -136,7 +136,7 @@ export default function ContactScreen({ onSubmitContact }: ContactScreenProps) {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 font-sans">
+    <div id="hero" className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 font-sans">
       {/* Decorative Top Accent */}
       <div className="w-16 h-[2px] bg-secondary mx-auto mb-6" />
 

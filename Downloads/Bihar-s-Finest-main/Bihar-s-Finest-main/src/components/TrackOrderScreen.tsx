@@ -117,7 +117,7 @@ export default function TrackOrderScreen({ setScreen, orders }: TrackOrderScreen
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-24 font-sans text-stone-900" id="track-order-root">
+    <div className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-24 font-sans text-stone-900" id="hero">
       
       {/* Breadcrumbs */}
       <nav className="text-xs text-stone-500 mb-8 flex items-center gap-1.5 font-light" id="track-breadcrumb">

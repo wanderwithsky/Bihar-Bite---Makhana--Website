@@ -104,7 +104,7 @@ export default function FAQScreen({ setScreen }: FAQScreenProps) {
   })).filter(cat => cat.items.length > 0);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-24 font-sans text-stone-900" id="faq-screen-root">
+    <div className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-24 font-sans text-stone-900" id="hero">
       
       {/* Breadcrumb & Navigation */}
       <nav className="text-xs text-stone-500 mb-8 flex items-center gap-1.5 font-light" id="faq-breadcrumb">
@@ -149,17 +149,17 @@ export default function FAQScreen({ setScreen }: FAQScreenProps) {
               If your inquiry isn't cataloged here, please reach out to our active helpdesk directly. Our Mithila support executives are available from 9 AM to 7 PM IST.
             </p>
             <div className="space-y-3.5 pt-2 text-xs text-stone-700">
-              <a href="https://wa.me/919123456789" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3.5 hover:text-[#7C8464] transition-colors font-medium">
+              <a href="https://wa.me/917985347849?text=Hi+Bihar+Bite%21+I%27d+like+to+know+more+about+your+Makhana+products." target="_blank" rel="noopener noreferrer" className="flex items-center gap-3.5 hover:text-[#7C8464] transition-colors font-medium">
                 <span className="w-8 h-8 rounded-xl bg-white border border-stone-200/50 flex items-center justify-center text-[#7C8464]"><MessageSquare className="w-4 h-4" /></span>
-                WhatsApp: +91 91234 56789
+                WhatsApp: +91 79853 47849
               </a>
-              <a href="mailto:care@biharbite.com" className="flex items-center gap-3.5 hover:text-[#7C8464] transition-colors font-medium">
+              <a href="mailto:info@biharbite.com" className="flex items-center gap-3.5 hover:text-[#7C8464] transition-colors font-medium">
                 <span className="w-8 h-8 rounded-xl bg-white border border-stone-200/50 flex items-center justify-center text-[#7C8464]"><Mail className="w-4 h-4" /></span>
-                care@biharbite.com
+                info@biharbite.com
               </a>
-              <a href="tel:+919123456789" className="flex items-center gap-3.5 hover:text-[#7C8464] transition-colors font-medium">
+              <a href="tel:+919336311140" className="flex items-center gap-3.5 hover:text-[#7C8464] transition-colors font-medium">
                 <span className="w-8 h-8 rounded-xl bg-white border border-stone-200/50 flex items-center justify-center text-[#7C8464]"><Phone className="w-4 h-4" /></span>
-                Phone: +91 91234 56789
+                Phone: +91 93363 11140
               </a>
             </div>
           </div>

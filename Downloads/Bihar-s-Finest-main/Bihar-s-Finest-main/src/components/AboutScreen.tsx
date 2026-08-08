@@ -38,7 +38,7 @@ export default function AboutScreen() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 font-sans">
+    <div id="hero" className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 font-sans">
       
       {/* Top Brand Divider Accent */}
       <div className="w-16 h-[2px] bg-secondary mx-auto mb-6" />

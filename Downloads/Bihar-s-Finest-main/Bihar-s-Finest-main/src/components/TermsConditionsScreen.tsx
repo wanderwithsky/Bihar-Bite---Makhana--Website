@@ -7,7 +7,7 @@ interface LegalPageProps {
 
 export default function TermsConditionsScreen({ setScreen }: LegalPageProps) {
   return (
-    <div className="max-w-4xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-24 font-sans">
+    <div id="hero" className="max-w-4xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-24 font-sans">
       
       {/* Back button */}
       <button 

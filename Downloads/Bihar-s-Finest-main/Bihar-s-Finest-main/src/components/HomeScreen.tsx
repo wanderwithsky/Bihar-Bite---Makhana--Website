@@ -1,9 +1,12 @@
 import { ArrowRight, Star, Award, ShieldCheck, Truck, RotateCcw, CheckSquare, HeartHandshake, Leaf, Globe, CheckCircle2, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Product, ScreenType } from '../types';
 import ProcessJourney from './ProcessJourney';
 import GallerySection from './GallerySection';
+import GlobalBackground from './GlobalBackground';
+import { productsData } from '../products';
 
 interface HomeScreenProps {
   setScreen: (screen: ScreenType) => void;
@@ -12,13 +15,100 @@ interface HomeScreenProps {
   products: Product[];
 }
 
+function SocialReelCard({ reel, idx, onClick }: { reel: any; idx: number; onClick: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (!reel.video || !videoRef.current) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          videoRef.current?.play().catch(() => {});
+        } else {
+          videoRef.current?.pause();
+        }
+      });
+    }, { threshold: 0.5 });
+    
+    observer.observe(videoRef.current);
+    return () => observer.disconnect();
+  }, [reel.video]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6, delay: idx * 0.1 }}
+      className="group relative bg-[#143A2A] rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-300 ease-out overflow-hidden cursor-pointer flex-shrink-0 snap-center w-[280px] md:w-auto aspect-[9/16] md:aspect-auto md:h-[480px] lg:h-[560px]"
+      onClick={onClick}
+    >
+      {/* Background Media */}
+      <video 
+        ref={videoRef}
+        src={reel.video}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.08]"
+      />
+      
+      {/* Bottom Dark Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#05110C]/90 via-[#05110C]/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300 pointer-events-none" />
+      
+      {/* Instagram Reels Badge */}
+      <div className="absolute top-5 left-5 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 z-10">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+        <span className="text-white text-[9px] font-bold tracking-wider leading-none pt-[1px]">REELS</span>
+      </div>
+
+      {/* Center Play Button */}
+      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+        <div className="w-[70px] h-[70px] rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 transition-all duration-300 group-hover:scale-[1.12] group-hover:bg-[#143A2A] group-hover:border-[#143A2A]">
+          <svg className="w-8 h-8 ml-1 text-white transition-colors duration-300 fill-white" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </div>
+      </div>
+
+
+    </motion.div>
+  );
+}
+
 export default function HomeScreen({
   setScreen,
   setSelectedCategory,
   setSelectedProduct,
   products,
 }: HomeScreenProps) {
-  const [activeReel, setActiveReel] = useState<{title: string, image: string} | null>(null);
+  const navigate = useNavigate();
+  const [activeReel, setActiveReel] = useState<{video: string} | null>(null);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.warn('Hero video autoplay prevented:', error);
+          // Video will still be visible due to attributes, might just need interaction on some strict browsers
+        });
+      }
+    }
+  }, []);
 
   const handleCollectionClick = (category: Product['category']) => {
     setSelectedCategory(category);
@@ -29,52 +119,155 @@ export default function HomeScreen({
   const bestsellers = products.filter((p) => p.isBestseller).slice(0, 3);
 
   return (
-    <div className="font-sans bg-[#FAF8F4] overflow-hidden">
+    <div className="font-sans bg-[#FAF8F4] overflow-hidden relative">
+      <GlobalBackground />
       
       {/* ─── HERO SECTION ─── */}
-      <section
-        id="hero"
-        className="relative w-full min-h-screen overflow-hidden"
-        style={{
-          background:
-            'radial-gradient(ellipse 90% 70% at 60% 30%, #FFF8EC 0%, #F8F3EA 50%, #EDE4D6 100%)',
-        }}
-      >
+      <div id="hero" className="w-full">
+        {/* ─── NEW MOBILE HERO (< 768px) ─── */}
+        <section 
+          className="md:hidden relative w-full min-h-[100svh] overflow-hidden"
+          style={{
+            backgroundImage: "url('/images/hero/mobile-hero.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          {/* Subtle gradient behind text only */}
+          <div 
+            className="absolute top-0 left-0 right-0 h-[50svh] z-0 pointer-events-none" 
+            style={{ 
+              background: 'linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.08) 45%, transparent 100%)' 
+            }} 
+          />
+
+          <div className="relative z-10 mx-auto flex flex-col items-center justify-start text-center pt-[20px]" style={{ width: 'min(90%, 420px)' }}>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              <img src="/images/hero/logo.png" alt="Bihar Bite" style={{ width: 'clamp(90px, 26vw, 140px)', height: 'auto', objectFit: 'contain' }} />
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="mt-[18px] font-serif tracking-tight font-bold text-center"
+              style={{ fontSize: 'clamp(2.4rem, 7vw, 3.3rem)', lineHeight: 0.95, maxWidth: '85vw', textShadow: '0 4px 18px rgba(0,0,0,.35)' }}
+            >
+              <span style={{ color: '#6B1232' }}>Premium</span><br />
+              <span style={{ color: '#183D2F' }}>Makhana</span>
+            </motion.h1>
+
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="mt-[12px] font-serif italic text-center"
+              style={{ color: '#D7A54B', fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', textShadow: '0 2px 10px rgba(0,0,0,.25)' }}
+            >
+              100% Natural
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+              className="mt-[14px] font-sans text-white font-medium text-center"
+              style={{ fontSize: 'clamp(0.95rem, 2.8vw, 1.15rem)', whiteSpace: 'nowrap', letterSpacing: '0.02em', textShadow: '0 2px 8px rgba(0,0,0,.25)' }}
+            >
+              Healthy &nbsp;•&nbsp; Crunchy &nbsp;•&nbsp; Farm Fresh
+            </motion.p>
+
+            <motion.button
+              onClick={() => handleCollectionClick('All')}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.0, ease: "easeOut" }}
+              className="mt-[18px] bg-white text-[#183D2F] rounded-[9999px] font-sans font-bold hover:bg-[#F8F5EE] transition-all shadow-[0_4px_12px_rgba(0,0,0,0.15)] cursor-pointer flex items-center justify-center tracking-[0.05em]"
+              style={{ width: 'clamp(180px, 58vw, 230px)', height: 'clamp(48px, 7vw, 56px)', fontSize: 'clamp(1rem, 3vw, 1.15rem)' }}
+            >
+              SHOP NOW
+            </motion.button>
+          </div>
+        </section>
+
+        {/* ─── DESKTOP HERO (>= 768px) ─── */}
+        <section
+          className="hidden md:block relative w-full min-h-screen overflow-hidden"
+          style={{
+            background:
+              'radial-gradient(ellipse 90% 70% at 60% 30%, #FFF8EC 0%, #F8F3EA 50%, #EDE4D6 100%)',
+          }}
+        >
+        {/* Loading Poster / Placeholder */}
+        <div 
+          className={`absolute inset-0 z-0 bg-[#E8E2D9] transition-opacity duration-[250ms] ease-in-out ${
+            isVideoReady ? 'opacity-0' : 'opacity-100'
+          }`} 
+        />
+
         {/* Fullscreen Video Background */}
         <video
+          key={isMobile ? 'mobile' : 'desktop'}
+          ref={videoRef}
           autoPlay
           muted
           loop
           playsInline
           preload="auto"
-          className="absolute inset-0 z-0 w-full h-full object-cover"
+          disablePictureInPicture
+          onCanPlay={() => setIsVideoReady(true)}
+          onError={() => setVideoError(true)}
+          className={`absolute inset-0 z-0 w-full h-full object-cover transition-opacity duration-[250ms] ease-in-out ${
+            isVideoReady && !videoError ? 'opacity-100' : 'opacity-0'
+          }`}
         >
-          <source src="/flow.mp4" type="video/mp4" />
+          {isMobile ? (
+            <source src="/videos/hero-m.mp4" type="video/mp4" />
+          ) : (
+            <source src="/flow.mp4" type="video/mp4" />
+          )}
         </video>
+        
+        {/* Fallback Image if video fails */}
+        {videoError && (
+          <img 
+            src="/images/hero/hero-composition.png" 
+            alt="Hero Background" 
+            className="absolute inset-0 z-0 w-full h-full object-cover"
+          />
+        )}
 
         {/* Subtle Text Readability Overlay */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 z-0 pointer-events-none"
+          className="absolute inset-0 z-[5] pointer-events-none"
           style={{
-            background: 'linear-gradient(to bottom, rgba(248,243,234,0.15) 0%, rgba(248,243,234,0.35) 100%)',
+            background: isMobile 
+              ? 'linear-gradient(90deg, rgba(0,0,0,0.60) 0%, rgba(0,0,0,0.45) 25%, rgba(0,0,0,0.20) 55%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0) 100%)'
+              : 'linear-gradient(to bottom, rgba(248,243,234,0.15) 0%, rgba(248,243,234,0.35) 100%)',
           }}
         />
 
         {/* Two-column layout — Left 45% / Right 55% */}
-        <div className="relative z-10 flex h-screen min-h-[700px] w-full max-w-[1600px] mx-auto px-8 md:px-14 lg:px-24 flex-col md:flex-row items-center">
+        <div className="relative z-10 flex min-h-[90vh] lg:h-screen lg:min-h-[700px] w-full max-w-[1600px] mx-auto px-6 md:px-14 lg:px-24 flex-col md:flex-row items-start md:items-center justify-start pt-[22vh] pb-[10vh] md:pt-0 md:pb-0">
 
           {/* ── LEFT 45% ── */}
-          <div className="flex w-full flex-col items-start justify-center md:w-[45%]">
+          <div className="flex w-full max-w-[500px] md:max-w-none md:w-[45%] flex-col items-start justify-start mx-0 text-left">
 
             {/* Brand Logo */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              className="mb-[40px]"
+              className="mb-[16px] md:mb-[40px]"
             >
-              <Leaf size={56} className="text-[#143A2A]" strokeWidth={1.2} />
+              <Leaf size={isMobile ? 42 : 56} className="text-white/95 md:text-[#143A2A]" strokeWidth={1.2} style={{ filter: isMobile ? 'drop-shadow(0 2px 10px rgba(0,0,0,0.4))' : 'none' }} />
             </motion.div>
 
             {/* Brand name */}
@@ -82,12 +275,12 @@ export default function HomeScreen({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-              className="font-serif text-[48px] sm:text-[64px] md:text-[78px] lg:text-[92px] font-semibold text-[#143A2A] whitespace-nowrap mb-[28px]"
+              className="font-serif font-semibold whitespace-nowrap mb-[16px] md:mb-[28px] text-[clamp(36px,9vw,44px)] md:text-responsive-h1 text-[#FBF9F6] md:text-[#143A2A]"
               style={{
                 fontFamily: '"Cormorant Garamond", "Playfair Display", serif',
-                letterSpacing: '-1.5px',
-                lineHeight: 0.95,
-                textShadow: '0 2px 12px rgba(255,255,255,0.12)'
+                letterSpacing: isMobile ? '-0.5px' : '-1.5px',
+                lineHeight: 1.0,
+                textShadow: isMobile ? '0 4px 20px rgba(0,0,0,0.5)' : '0 2px 12px rgba(255,255,255,0.12)'
               }}
             >
               Bihar Bite
@@ -98,32 +291,54 @@ export default function HomeScreen({
               initial={{ scaleX: 0, opacity: 0 }}
               animate={{ scaleX: 1, opacity: 1 }}
               transition={{ duration: 1.0, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative flex items-center justify-center w-[220px] h-[1.5px] bg-[rgba(184,151,86,0.7)] mb-[24px]"
+              className="relative flex items-center justify-center w-[120px] md:w-[220px] h-[1.5px] bg-[rgba(255,255,255,0.5)] md:bg-[rgba(184,151,86,0.7)] mb-[20px] md:mb-[24px]"
             >
               {/* Small luxury diamond ornament in the center */}
-              <div className="absolute w-[6px] h-[6px] rotate-45 bg-[rgba(184,151,86,1)] outline outline-[1px] outline-offset-[2px] outline-[rgba(184,151,86,0.6)]" />
+              <div className="absolute w-[6px] h-[6px] rotate-45 bg-white md:bg-[rgba(184,151,86,1)] outline outline-[1px] outline-offset-[2px] outline-[rgba(255,255,255,0.3)] md:outline-[rgba(184,151,86,0.6)]" />
             </motion.div>
 
             {/* Tagline */}
             <motion.p
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.95 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 1.0, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="font-serif italic text-[18px] sm:text-[22px] md:text-[24px] lg:text-[28px] text-[#8A6A3E]"
+              className="font-serif italic text-[16px] sm:text-[18px] md:text-responsive-h3 text-[rgba(255,255,255,0.92)] md:text-[#8A6A3E] leading-[1.5] md:leading-normal text-left"
               style={{
                 fontFamily: '"Cormorant Garamond", "Playfair Display", serif',
                 letterSpacing: '0.4px',
-                textShadow: '0 2px 12px rgba(255,255,255,0.12)'
+                textShadow: isMobile ? '0 2px 10px rgba(0,0,0,0.5)' : '0 2px 12px rgba(255,255,255,0.12)'
               }}
             >
-              Sustainably Harvested &nbsp;•&nbsp; Artfully Sourced
+              {isMobile ? (
+                <>Sustainably Harvested<br/>Artfully Sourced</>
+              ) : (
+                <>Sustainably Harvested &nbsp;•&nbsp; Artfully Sourced</>
+              )}
             </motion.p>
+            
+            {/* CTA Button */}
+            {isMobile && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1.0, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-8"
+              >
+                <button 
+                  onClick={() => handleCollectionClick('All')}
+                  className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-3.5 rounded-full font-sans text-[11px] uppercase tracking-[0.15em] font-bold hover:bg-white hover:text-[#143A2A] transition-all shadow-lg active:scale-95"
+                >
+                  Explore Collection
+                </button>
+              </motion.div>
+            )}
           </div>
 
 
 
         </div>
-      </section>
+        </section>
+      </div>
 
       {/* ─── TRUST & BRAND HIGHLIGHTS MARQUEE ─── */}
       <section className="w-full h-[60px] bg-[#F8F5EE] border-y border-[#D8C29A] flex items-center relative z-20">
@@ -194,13 +409,24 @@ export default function HomeScreen({
       </section>
 
       {/* ─── FEATURED PRODUCTS SECTION ─── */}
-      <section className="relative w-full py-[120px] bg-[#FAF7F2] overflow-hidden">
-        {/* Subtle Pattern Background */}
-        <div 
-          className="absolute inset-0 z-0 opacity-5 pointer-events-none"
-          style={{ backgroundImage: 'url("/images/04.png")', backgroundSize: '250px', backgroundRepeat: 'repeat', backgroundPosition: 'center' }}
-        />
+      <section className="relative w-full pt-[120px] pb-[40px] md:pb-[50px] bg-transparent overflow-hidden">
         
+        {/* Ambient Section Decor: Lotus Leaf & Warm Glow */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[radial-gradient(circle,_#FDFBF5_0%,_transparent_70%)] blur-[100px] opacity-70" />
+          <motion.div 
+            initial={{ x: -100, rotate: -15, opacity: 0 }}
+            whileInView={{ x: -30, rotate: -5, opacity: 0.05 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="absolute top-[20%] -left-[10%] w-[500px] h-[500px]"
+          >
+            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M100 10C149.706 10 190 50.2944 190 100C190 149.706 149.706 190 100 190C50.2944 190 10 149.706 10 100C10 50.2944 50.2944 10 100 10Z" fill="#143A2A"/>
+              <path d="M100 10V100" stroke="#143A2A" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </motion.div>
+        </div>
+
         <div className="relative z-10 w-[92%] md:w-[85%] lg:w-[80%] max-w-[1700px] mx-auto">
           
           {/* Section Title */}
@@ -214,20 +440,18 @@ export default function HomeScreen({
 
           {/* Product Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[32px]">
-            {[
-              { name: "Premium Plain Makhana", price: 399, weight: "250 G", image: "/images/04.png" },
-              { name: "Roasted Makhana", price: 229, weight: "100 G", image: "/images/02.png" },
-              { name: "Makhana Papad", price: 199, weight: "200 G", image: "/images/01.png" },
-              { name: "Makhana Cookies", price: 249, weight: "150 G", image: "/images/03.png" }
-            ].map((prod, idx) => (
+            {productsData.filter(p => p.isBestseller).slice(0, 4).map((prod, idx) => {
+              const coverImage = prod.images?.[0] || '/images/04.png';
+              
+              return (
               <motion.div
-                key={idx}
+                key={prod.slug}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: (idx + 1) * 0.1 }}
                 className="group relative bg-[#FDFDF9] rounded-[36px] border border-[#EBE6DA] shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-[10px] transition-all duration-300 overflow-hidden flex flex-col cursor-pointer h-full"
-                onClick={() => setScreen('shop')}
+                onClick={() => navigate(`/product/${prod.slug}`)}
               >
                 {/* Image Area */}
                 <div className="relative w-full h-[400px] lg:h-[500px] p-[20px] flex items-center justify-center bg-transparent overflow-hidden">
@@ -235,11 +459,23 @@ export default function HomeScreen({
                   {/* Floating Decoration */}
                   <img src="/images/hero/03.png" aria-hidden="true" className="absolute top-6 right-6 w-16 opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:rotate-12 blur-[1px] pointer-events-none" />
 
-                  <img 
-                    src={prod.image} 
-                    alt={prod.name} 
-                    className="w-full h-full object-contain object-center group-hover:scale-[1.04] transition-transform duration-300 ease-out drop-shadow-sm"
-                  />
+                  {prod.video ? (
+                    <video
+                      src={prod.video}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      className="w-full h-full object-contain object-center group-hover:scale-[1.04] transition-transform duration-300 ease-out drop-shadow-sm"
+                    />
+                  ) : (
+                    <img 
+                      src={coverImage} 
+                      alt={prod.name} 
+                      className="w-full h-full object-contain object-center group-hover:scale-[1.04] transition-transform duration-300 ease-out drop-shadow-sm"
+                    />
+                  )}
                 </div>
                 
                 {/* Content Area */}
@@ -255,29 +491,29 @@ export default function HomeScreen({
                     <div className="relative h-[36px] flex items-center w-full">
                       {/* Price (default state) */}
                       <div className="absolute left-0 flex items-center transition-all duration-300 ease-out group-hover:opacity-0 group-hover:-translate-y-2">
-                        <span className="font-sans font-bold text-[#143A2A] text-[22px]">₹{prod.price}</span>
+                        <span className="font-sans font-bold text-[#143A2A] text-[22px]">{prod.priceDisplay || `₹${prod.price}`}</span>
                       </div>
                       
                       {/* Add to Cart Button (hover state) */}
                       <div className="absolute left-0 flex items-center opacity-0 translate-y-2 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0">
                         <button 
                           className="bg-[#143A2A] text-[#FDFCF8] text-[11px] font-bold tracking-[0.15em] px-5 py-2.5 rounded-full uppercase shadow-md hover:bg-[#0E281C] transition-colors"
-                          onClick={(e) => { e.stopPropagation(); setScreen('shop'); }}
+                          onClick={(e) => { e.stopPropagation(); navigate(`/product/${prod.slug}`); }}
                         >
-                          ADD TO CART
+                          VIEW DETAILS
                         </button>
                       </div>
                       
                       {/* Weight (always visible on right) */}
                       <div className="absolute right-0 flex items-center h-full">
-                        <span className="font-sans font-bold text-[#8C7D5F] text-[12px] uppercase tracking-[0.1em]">{prod.weight}</span>
+                        <span className="font-sans font-bold text-[#8C7D5F] text-[12px] uppercase tracking-[0.1em]">{prod.weight || '100g'}</span>
                       </div>
                     </div>
 
                   </div>
                 </div>
               </motion.div>
-            ))}
+            )})}
           </div>
 
           {/* View All Button */}
@@ -294,35 +530,22 @@ export default function HomeScreen({
       </section>
 
       {/* ─── SCROLL THE SOCIALS SECTION ─── */}
-      <section className="relative w-full py-[120px] bg-[#FAF8F4] overflow-hidden border-t border-[#EBE6DA]">
+      <section className="relative w-full pt-[50px] md:pt-[60px] pb-[120px] bg-transparent overflow-hidden border-t border-[#EBE6DA]">
         
-        {/* Premium Luxury Background */}
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-gradient-to-b from-[#FAF8F4] to-[#F5F2E9]">
-          {/* Radial light behind heading */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[800px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FFFFFF] via-[#FAF8F4]/50 to-transparent opacity-80 blur-3xl" />
-          
-          {/* Subtle Abstract Blobs */}
-          <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#E8E2D2] blur-[120px] opacity-40 mix-blend-multiply" />
-          <div className="absolute bottom-[-10%] left-[-5%] w-[800px] h-[800px] rounded-full bg-[#E5DFCD] blur-[150px] opacity-40 mix-blend-multiply" />
-          
-          {/* Noise/Grain Texture */}
-          <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
-
-          {/* Faint Social Icons in Corners */}
-          <motion.div initial={{ y: 0 }} whileInView={{ y: -30 }} transition={{ duration: 3, ease: "easeOut" }} className="absolute inset-0">
-            {/* Instagram */}
-            <svg className="absolute top-20 left-10 md:left-20 w-24 h-24 md:w-32 md:h-32 text-[#143A2A] opacity-[0.02] -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-            {/* Heart */}
-            <svg className="absolute bottom-32 right-10 md:right-20 w-32 h-32 md:w-48 md:h-48 text-[#143A2A] opacity-[0.02] rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-            {/* Comment */}
-            <svg className="absolute top-1/2 left-5 md:left-16 w-20 h-20 md:w-28 md:h-28 text-[#C28E63] opacity-[0.03] -rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-            {/* Play Button */}
-            <svg className="absolute bottom-20 left-1/4 w-24 h-24 md:w-36 md:h-36 text-[#143A2A] opacity-[0.02] rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            {/* Share / Camera */}
-            <svg className="absolute top-32 right-20 md:right-32 w-24 h-24 md:w-28 md:h-28 text-[#C28E63] opacity-[0.02] rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
-          </motion.div>
+        {/* Ambient Section Decor: Instagram Story Abstract Blobs */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <motion.div 
+            animate={{ scale: [1, 1.1, 1], rotate: [0, 90, 0] }} 
+            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[10%] left-[10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,_#E2C8BA_0%,_transparent_70%)] blur-[120px] opacity-20 mix-blend-multiply" 
+          />
+          <motion.div 
+            animate={{ scale: [1, 1.2, 1], rotate: [0, -90, 0] }} 
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            className="absolute bottom-[10%] right-[10%] w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,_#DFD0B8_0%,_transparent_70%)] blur-[130px] opacity-20 mix-blend-multiply" 
+          />
         </div>
-        
+
         <div className="relative z-10 w-[95%] md:w-[90%] lg:w-[85%] max-w-[1600px] mx-auto">
           
           {/* Section Title */}
@@ -340,58 +563,19 @@ export default function HomeScreen({
           {/* Reels Row */}
           <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 custom-scrollbar md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible md:snap-none md:gap-[32px] md:pb-0 px-4 md:px-0">
             {[
-              { title: "Harvesting Fresh Makhana", image: "/images/reels/harvesting.png" },
-              { title: "Inside Bihar Bite Factory", image: "/images/reels/factory.png" },
-              { title: "Healthy Evening Snack", image: "/images/reels/snack.png" },
-              { title: "From Pond to Premium", image: "/images/reels/flatlay.png" }
+              { video: "/videos/process-of-makhana.mp4" },
+              { video: "/videos/social-01.mp4" },
+              { video: "/videos/social-02.mp4" },
+              { video: "/videos/social-03.mp4" }
             ].map((reel, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: idx * 0.1 }}
-                className="group relative bg-[#143A2A] rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-300 ease-out overflow-hidden cursor-pointer flex-shrink-0 snap-center w-[280px] md:w-auto aspect-[9/16] md:aspect-auto md:h-[480px] lg:h-[560px]"
-                onClick={() => setActiveReel(reel)}
-              >
-                {/* Background Image */}
-                <img 
-                  src={reel.image} 
-                  alt={reel.title} 
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.08]"
-                />
-                
-                {/* Bottom Dark Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#05110C]/90 via-[#05110C]/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300 pointer-events-none" />
-                
-                {/* Instagram Reels Badge */}
-                <div className="absolute top-5 left-5 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 z-10">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                  <span className="text-white text-[9px] font-bold tracking-wider leading-none pt-[1px]">REELS</span>
-                </div>
-
-                {/* Center Play Button */}
-                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                  <div className="w-[70px] h-[70px] rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 transition-all duration-300 group-hover:scale-[1.12] group-hover:bg-[#143A2A] group-hover:border-[#143A2A]">
-                    <svg className="w-8 h-8 ml-1 text-white transition-colors duration-300 fill-white" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Bottom Title */}
-                <div className="absolute bottom-6 left-6 right-6 z-10">
-                  <h3 className="text-white font-sans font-medium text-lg leading-snug drop-shadow-md">
-                    {reel.title}
-                  </h3>
-                </div>
-              </motion.div>
+              <SocialReelCard key={idx} reel={reel} idx={idx} onClick={() => setActiveReel(reel as any)} />
             ))}
           </div>
 
           {/* Bottom CTA */}
           <div className="flex justify-center mt-16">
             <button 
+              onClick={() => window.open('https://instagram.com/bihar_biteofficial', '_blank')}
               className="group flex items-center gap-3 bg-[#143A2A] text-[#FAF8F4] px-10 py-4 rounded-full font-sans font-bold uppercase tracking-widest text-[12px] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]"
             >
               View Instagram <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -419,18 +603,14 @@ export default function HomeScreen({
               className="relative w-full max-w-[400px] md:max-w-[440px] aspect-[9/16] bg-[#0A1A12] rounded-3xl overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Background Image */}
-              <img src={activeReel.image} className="absolute inset-0 w-full h-full object-cover opacity-60" />
-              
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10">
-                <div className="w-[80px] h-[80px] rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 mb-8 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
-                  <svg className="w-10 h-10 ml-1 text-white fill-white opacity-90" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-                <h3 className="font-sans font-semibold text-2xl text-white mb-6 drop-shadow-lg leading-snug">{activeReel.title}</h3>
-                <p className="font-sans text-[#D8C29A] uppercase tracking-[0.2em] text-[11px] font-bold bg-black/40 px-5 py-2.5 rounded-full backdrop-blur-md border border-white/10">
-                  Video coming soon
-                </p>
-              </div>
+              <video
+                src={activeReel.video}
+                autoPlay
+                controls
+                playsInline
+                preload="auto"
+                className="absolute inset-0 w-full h-full object-contain"
+              />
 
               {/* Close Button */}
               <button 
@@ -445,12 +625,27 @@ export default function HomeScreen({
       </AnimatePresence>
 
       {/* ─── CUSTOMER TESTIMONIALS ─── */}
-      <section className="relative w-full py-[120px] bg-[#FAF8F4] overflow-hidden border-t border-[#EBE6DA]">
-        {/* Subtle Background Art */}
-        <div 
-          className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
-          style={{ backgroundImage: 'url("/images/hero/02.png")', backgroundSize: '400px', backgroundRepeat: 'repeat', backgroundPosition: 'center' }}
-        />
+      <section className="relative w-full py-[120px] bg-transparent overflow-hidden border-t border-[#EBE6DA]">
+        
+        {/* Ambient Section Decor: Floating Quotation Marks */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            whileInView={{ y: -50, opacity: 0.03 }}
+            transition={{ duration: 3, ease: "easeOut" }}
+            className="absolute -top-10 left-[5%] text-[400px] font-serif text-[#143A2A] leading-none"
+          >
+            "
+          </motion.div>
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            whileInView={{ y: -20, opacity: 0.02 }}
+            transition={{ duration: 4, ease: "easeOut", delay: 0.2 }}
+            className="absolute bottom-10 right-[5%] text-[500px] font-serif text-[#143A2A] leading-none rotate-180"
+          >
+            "
+          </motion.div>
+        </div>
 
         <div className="relative z-10 w-full">
           {/* Section Title */}
@@ -517,8 +712,32 @@ export default function HomeScreen({
       </section>
 
       {/* ─── HERITAGE SECTION ─── */}
-      <section className="relative w-full py-24 bg-[#FAF8F4] overflow-hidden">
+      <section className="relative w-full py-24 bg-transparent overflow-hidden">
         
+        {/* Ambient Section Decor: Wetland Ripples and Lotus Leaves */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 0.04 }}
+            transition={{ duration: 2, ease: "easeOut" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] rounded-full border-[1px] border-[#143A2A]"
+          />
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            whileInView={{ scale: 1.1, opacity: 0.02 }}
+            transition={{ duration: 2.5, ease: "easeOut" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1600px] h-[1600px] rounded-full border-[1px] border-[#143A2A]"
+          />
+          <motion.div 
+            style={{ y: -50 }}
+            className="absolute -bottom-32 -right-32 opacity-[0.05] animate-float-leaf"
+          >
+            <svg width="600" height="600" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="-rotate-12">
+              <path d="M100 10C149.706 10 190 50.2944 190 100C190 149.706 149.706 190 100 190C50.2944 190 10 149.706 10 100C10 50.2944 50.2944 10 100 10Z" fill="#143A2A"/>
+            </svg>
+          </motion.div>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col items-center justify-center text-center mb-16 px-6">
           <motion.div
@@ -601,7 +820,7 @@ export default function HomeScreen({
       <GallerySection />
 
       {/* Elegant CTA */}
-      <section className="py-32 bg-[#FAF8F4] relative">
+      <section className="py-32 bg-transparent relative">
          <div className="max-w-4xl mx-auto px-6 text-center">
             <motion.div
                initial={{ opacity: 0, scale: 0.95 }}
@@ -618,10 +837,7 @@ export default function HomeScreen({
                </p>
                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button 
-                    onClick={() => {
-                      setSelectedCategory('All');
-                      setScreen('shop');
-                    }}
+                    onClick={() => navigate('/product/:id')}
                     className="bg-[#3A3832] text-white px-8 py-4 rounded-full text-xs font-bold uppercase tracking-[0.15em] hover:bg-[#1A1A1A] transition-colors"
                   >
                     Shop Retail
