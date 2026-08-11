@@ -1,0 +1,6 @@
+{
+  "name": "Bihar Bite",
+  "description": "Premium Makhana E-Commerce platform featuring organic and sustainably sourced fox nuts from Bihar.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
