@@ -266,7 +266,10 @@ export default function Header({
                   <Heart className="w-[18px] h-[18px]" strokeWidth={1.5} />
                 </button>
                 <button 
-                  onClick={() => (currentUser || currentAdmin) ? handleNavClick('/account') : onOpenAuthModal()}
+                  onClick={() => {
+                    if (currentUser) handleNavClick('/account');
+                    else onOpenAuthModal();
+                  }}
                   className="w-11 h-11 flex items-center justify-center text-[#4A4A3A] hover:text-[#7C8464] transition-colors rounded-full hover:bg-stone-100 hidden md:flex"
                 >
                   <UserCircle className="w-[18px] h-[18px]" strokeWidth={1.5} />
@@ -542,7 +545,7 @@ export default function Header({
                   <button
                     onClick={() => {
                       setIsExpanded(false);
-                      if (currentUser || currentAdmin) handleNavClick('/account');
+                      if (currentUser) handleNavClick('/account');
                       else onOpenAuthModal();
                     }}
                     className="w-10 h-10 flex items-center justify-center text-stone-600 hover:bg-stone-100 rounded-full transition-colors"

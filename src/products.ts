@@ -1,4 +1,5 @@
 export interface ProductData {
+  id: string;
   slug: string;
   name: string;
   price: number;
@@ -23,6 +24,7 @@ export interface ProductData {
 
 export const productsData: ProductData[] = [
   {
+    id: 'premium-plain-makhana',
     slug: 'premium-plain-makhana',
     name: 'Premium Plain Makhana',
     price: 199,
@@ -37,6 +39,7 @@ export const productsData: ProductData[] = [
     weightPrices: { '100g': 99, '250g': 199, '500g': 389, '1 KG': 749 }
   },
   {
+    id: 'roasted-makhana',
     slug: 'roasted-makhana',
     name: 'Roasted Makhana',
     price: 229,
@@ -51,6 +54,7 @@ export const productsData: ProductData[] = [
     weightPrices: { '100g': 229, '250g': 499, '500g': 899, '1 KG': 1699 }
   },
   {
+    id: '4-suta-loose-makhana',
     slug: '4-suta-loose-makhana',
     name: '4 Suta Loose Makhana',
     price: 550,
@@ -67,6 +71,7 @@ export const productsData: ProductData[] = [
     weightPrices: { '1 KG': 550 }
   },
   {
+    id: '5-suta-loose-makhana',
     slug: '5-suta-loose-makhana',
     name: '5 Suta Loose Makhana',
     price: 900,
@@ -83,6 +88,7 @@ export const productsData: ProductData[] = [
     weightPrices: { '1 KG': 900 }
   },
   {
+    id: '6-suta-handpick-loose-makhana',
     slug: '6-suta-handpick-loose-makhana',
     name: '6 Suta Handpick Loose Makhana',
     price: 1250,
@@ -99,6 +105,7 @@ export const productsData: ProductData[] = [
     weightPrices: { '1 KG': 1250 }
   },
   {
+    id: 'makhana-papad',
     slug: 'makhana-papad',
     name: 'Makhana Papad',
     price: 649,
@@ -112,6 +119,7 @@ export const productsData: ProductData[] = [
     weightPrices: { '200g': 149, '500g': 349, '1 KG': 649 }
   },
   {
+    id: 'makhana-cookies',
     slug: 'makhana-cookies',
     name: 'Makhana Cookies',
     price: 109,
@@ -125,6 +133,7 @@ export const productsData: ProductData[] = [
     weightPrices: { '125g': 109, '250g': 199, '500g': 399 }
   },
   {
+    id: 'gold-makhana',
     slug: 'gold-makhana',
     name: 'Gold Makhana',
     price: 245,
@@ -143,6 +152,7 @@ export const productsData: ProductData[] = [
     weightPrices: { '250g': 245 }
   },
   {
+    id: '10-kg-loose-makhana',
     slug: '10-kg-loose-makhana',
     name: '10 KG Loose Makhana',
     price: 849,

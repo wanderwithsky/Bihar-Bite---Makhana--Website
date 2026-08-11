@@ -531,7 +531,9 @@ export async function fetchUserProfile(userId: string): Promise<AppUser | null> 
             email: user.email,
             mobile: mobile,
             status: 'Active',
-            saved_addresses: []
+            saved_addresses: [],
+            avatar_url: null,
+            preferences: { orderUpdates: true, emailNotifications: true, marketingOffers: false }
           }])
           .select('*')
           .maybeSingle();
@@ -561,7 +563,9 @@ export async function fetchUserProfile(userId: string): Promise<AppUser | null> 
       status: (profile.status as 'Active' | 'Suspended') || 'Active',
       dateRegistered: profile.created_at ? new Date(profile.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       orderHistory: orderHistory,
-      savedAddresses: profile.saved_addresses || []
+      savedAddresses: profile.saved_addresses || [],
+      avatarUrl: profile.avatar_url,
+      preferences: profile.preferences || { orderUpdates: true, emailNotifications: true, marketingOffers: false }
     };
   } catch (err) {
     console.error('Error fetching user profile:', err);
@@ -571,19 +575,20 @@ export async function fetchUserProfile(userId: string): Promise<AppUser | null> 
 
 export async function updateUserProfile(
   userId: string,
-  fullName: string,
-  mobile: string,
-  savedAddresses: any[]
+  updates: Partial<any>
 ): Promise<boolean> {
   if (!supabase) return false;
+  
+  const payload: any = { updated_at: new Date().toISOString() };
+  if (updates.fullName !== undefined) payload.full_name = updates.fullName;
+  if (updates.mobile !== undefined) payload.mobile = updates.mobile;
+  if (updates.savedAddresses !== undefined) payload.saved_addresses = updates.savedAddresses;
+  if (updates.avatarUrl !== undefined) payload.avatar_url = updates.avatarUrl;
+  if (updates.preferences !== undefined) payload.preferences = updates.preferences;
+
   const { error } = await supabase
     .from('profiles')
-    .update({
-      full_name: fullName,
-      mobile: mobile,
-      saved_addresses: savedAddresses,
-      updated_at: new Date().toISOString()
-    })
+    .update(payload)
     .eq('id', userId);
 
   if (error) throw error;

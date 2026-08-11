@@ -2,7 +2,7 @@ import { useState, ReactNode, useEffect } from 'react';
 import { Product, User, Order } from '../../types';
 import {
   TrendingUp, Layers, Users, ShoppingBag, Receipt, MessageSquare,
-  Settings, X
+  Settings, X, Edit2
 } from 'lucide-react';
 import AdminHeader from './AdminHeader';
 import AdminOverviewTab from './AdminOverviewTab';
@@ -46,6 +46,55 @@ export default function AdminLayout(props: AdminLayoutProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newLeadsCount, setNewLeadsCount] = useState(0);
+
+  // Store Configuration State
+  const DEFAULT_CONFIG = {
+    storeName: 'Bihar Bite',
+    supportEmail: 'hello@biharbite.com',
+    supportPhone: '+91 98765 43210',
+    origin: 'Mithila, Bihar'
+  };
+  
+  const [storeConfig, setStoreConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('biharbite_store_config');
+      return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+    } catch {
+      return DEFAULT_CONFIG;
+    }
+  });
+  
+  const [isEditingConfig, setIsEditingConfig] = useState(false);
+  const [configForm, setConfigForm] = useState(storeConfig);
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+
+  const handleSaveConfig = async () => {
+    if (!configForm.storeName || !configForm.supportEmail || !configForm.supportPhone || !configForm.origin) {
+      showToast('All fields are required', 'error');
+      return;
+    }
+
+    setIsSavingConfig(true);
+    
+    // Simulate network delay for persistence
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    try {
+      localStorage.setItem('biharbite_store_config', JSON.stringify(configForm));
+      setStoreConfig(configForm);
+      setIsEditingConfig(false);
+      showToast('Store configuration saved successfully', 'success');
+    } catch (error) {
+      showToast('Failed to save configuration', 'error');
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
+
+  const handleCancelConfig = () => {
+    setConfigForm(storeConfig);
+    setIsEditingConfig(false);
+  };
 
   const activeMeta = NAV_ITEMS.find(n => n.id === activeSection)!;
 
@@ -157,28 +206,108 @@ export default function AdminLayout(props: AdminLayoutProps) {
             )}
             {activeSection === 'settings' && (
               <div className="bg-white border border-[#E5DFD1] rounded-3xl p-8 space-y-6 shadow-sm">
-                <div>
-                  <h3 className="font-serif text-xl font-bold text-primary">Store Configuration</h3>
-                  <p className="text-xs text-on-surface-variant/70 mt-1">Core storefront details currently in use.</p>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-primary">Store Configuration</h3>
+                    <p className="text-xs text-on-surface-variant/70 mt-1">Core storefront details currently in use.</p>
+                  </div>
+                  {!isEditingConfig && (
+                    <button 
+                      onClick={() => {
+                        setConfigForm(storeConfig);
+                        setIsEditingConfig(true);
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-[#FAF8F4] hover:bg-[#E5DFD1] border border-[#E5DFD1] text-[#4A4A3A] rounded-full text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      Edit
+                    </button>
+                  )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="bg-[#FAF8F4] border border-[#E5DFD1]/60 rounded-2xl p-4 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-[#4A4A3A]">Store Name</span>
-                    <p className="font-bold text-primary text-sm">Bihar Bite</p>
+
+                {!isEditingConfig ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div className="bg-[#FAF8F4] border border-[#E5DFD1]/60 rounded-2xl p-4 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-[#4A4A3A]">Store Name</span>
+                      <p className="font-bold text-primary text-sm">{storeConfig.storeName}</p>
+                    </div>
+                    <div className="bg-[#FAF8F4] border border-[#E5DFD1]/60 rounded-2xl p-4 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-[#4A4A3A]">Support Email</span>
+                      <p className="font-bold text-primary text-sm">{storeConfig.supportEmail}</p>
+                    </div>
+                    <div className="bg-[#FAF8F4] border border-[#E5DFD1]/60 rounded-2xl p-4 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-[#4A4A3A]">Support Phone</span>
+                      <p className="font-bold text-primary text-sm">{storeConfig.supportPhone}</p>
+                    </div>
+                    <div className="bg-[#FAF8F4] border border-[#E5DFD1]/60 rounded-2xl p-4 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-[#4A4A3A]">Origin</span>
+                      <p className="font-bold text-primary text-sm">{storeConfig.origin}</p>
+                    </div>
                   </div>
-                  <div className="bg-[#FAF8F4] border border-[#E5DFD1]/60 rounded-2xl p-4 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-[#4A4A3A]">Support Email</span>
-                    <p className="font-bold text-primary text-sm">hello@biharbite.com</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-[#FAF8F4] p-6 rounded-2xl border border-[#E5DFD1]/60">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-[#4A4A3A]">Store Name</label>
+                      <input 
+                        type="text" 
+                        value={configForm.storeName}
+                        onChange={(e) => setConfigForm({...configForm, storeName: e.target.value})}
+                        className="w-full bg-white border border-[#E5DFD1] rounded-xl px-3 py-2 text-sm font-bold text-primary focus:outline-none focus:border-[#7C8464] transition-colors"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-[#4A4A3A]">Support Email</label>
+                      <input 
+                        type="email" 
+                        value={configForm.supportEmail}
+                        onChange={(e) => setConfigForm({...configForm, supportEmail: e.target.value})}
+                        className="w-full bg-white border border-[#E5DFD1] rounded-xl px-3 py-2 text-sm font-bold text-primary focus:outline-none focus:border-[#7C8464] transition-colors"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-[#4A4A3A]">Support Phone</label>
+                      <input 
+                        type="tel" 
+                        value={configForm.supportPhone}
+                        onChange={(e) => setConfigForm({...configForm, supportPhone: e.target.value})}
+                        className="w-full bg-white border border-[#E5DFD1] rounded-xl px-3 py-2 text-sm font-bold text-primary focus:outline-none focus:border-[#7C8464] transition-colors"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-[#4A4A3A]">Origin</label>
+                      <input 
+                        type="text" 
+                        value={configForm.origin}
+                        onChange={(e) => setConfigForm({...configForm, origin: e.target.value})}
+                        className="w-full bg-white border border-[#E5DFD1] rounded-xl px-3 py-2 text-sm font-bold text-primary focus:outline-none focus:border-[#7C8464] transition-colors"
+                      />
+                    </div>
+                    <div className="sm:col-span-2 flex gap-3 justify-end mt-4 pt-4 border-t border-[#E5DFD1]">
+                      <button 
+                        onClick={handleCancelConfig}
+                        disabled={isSavingConfig}
+                        className="px-5 py-2.5 rounded-full text-xs font-bold text-on-surface-variant bg-white border border-[#E5DFD1] hover:bg-[#FAF8F4] transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={handleSaveConfig}
+                        disabled={isSavingConfig}
+                        className="flex items-center justify-center min-w-[120px] px-5 py-2.5 rounded-full text-xs font-bold text-white bg-[#143A2A] hover:bg-[#0E281C] transition-colors disabled:opacity-70 cursor-pointer shadow-sm"
+                      >
+                        {isSavingConfig ? (
+                          <span className="flex items-center gap-2">
+                            <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                            Saving...
+                          </span>
+                        ) : (
+                          'Save Changes'
+                        )}
+                      </button>
+                    </div>
                   </div>
-                  <div className="bg-[#FAF8F4] border border-[#E5DFD1]/60 rounded-2xl p-4 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-[#4A4A3A]">Support Phone</span>
-                    <p className="font-bold text-primary text-sm">+91 98765 43210</p>
-                  </div>
-                  <div className="bg-[#FAF8F4] border border-[#E5DFD1]/60 rounded-2xl p-4 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-[#4A4A3A]">Origin</span>
-                    <p className="font-bold text-primary text-sm">Mithila, Bihar</p>
-                  </div>
-                </div>
+                )}
+                
                 <p className="text-[11px] text-on-surface-variant/60 italic">More configuration options (tax rates, shipping rules, payment gateways) coming soon.</p>
               </div>
             )}

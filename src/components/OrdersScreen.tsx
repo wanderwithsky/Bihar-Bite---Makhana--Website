@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Order } from '../types';
-import { Package, ArrowLeft, ChevronRight, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { Package, ArrowLeft, ChevronRight, CheckCircle2, Clock, XCircle, Download } from 'lucide-react';
 import { motion } from 'motion/react';
+import { generateInvoicePDF } from '../utils/pdfGenerator';
 
 interface OrdersScreenProps {
   currentUser: User | null;
@@ -90,11 +91,19 @@ export default function OrdersScreen({ currentUser, orders, onOpenAuthModal }: O
                   </div>
                   
                   <div className="text-sm text-stone-500 mb-6">
-                    Placed on {new Date(order.date).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                    <p>
+                      Placed on {new Date(order.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                      {order.time ? `, ${order.time}` : ''}
+                    </p>
+                    {order.deliveryStartDate && order.deliveryEndDate && (
+                      <p className="mt-1 font-semibold text-[#143A2A]">
+                        Est. Delivery: {new Date(order.deliveryStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – {new Date(order.deliveryEndDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-3">
@@ -120,16 +129,25 @@ export default function OrdersScreen({ currentUser, orders, onOpenAuthModal }: O
                   <div className="w-full text-left md:text-right mb-6 md:mb-0">
                     <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Total Amount</p>
                     <p className="text-3xl font-bold text-[#7C8464]">₹{order.total}</p>
-                    <p className="text-xs text-stone-500 mt-2">Paid securely</p>
+                    <p className="text-xs text-stone-500 mt-2">{order.paymentStatus || 'Payment Pending'}</p>
                   </div>
                   
-                  <button 
-                    onClick={() => navigate('/track-order', { state: { orderId: order.id } })}
-                    className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-[#143A2A] text-white rounded-full font-bold text-sm tracking-wider hover:bg-[#0E281C] transition-colors shadow-md"
-                  >
-                    View Details
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                  <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full md:w-auto">
+                    <button 
+                      onClick={() => navigate('/track-order', { state: { orderId: order.id } })}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#143A2A] text-white rounded-full font-bold text-sm tracking-wider hover:bg-[#0E281C] transition-colors shadow-md"
+                    >
+                      View Details
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => generateInvoicePDF(order)}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-[#143A2A] text-[#143A2A] rounded-full font-bold text-sm tracking-wider hover:bg-stone-50 transition-colors shadow-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      Invoice
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}

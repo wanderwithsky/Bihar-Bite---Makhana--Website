@@ -63,11 +63,30 @@ export interface Order {
   date: string;
   status: 'Pending' | 'Completed' | 'Cancelled' | 'Processing' | 'Shipped' | 'Delivered' | 'Returned';
   total: number;
+  subtotal?: number;
+  shippingCharge?: number;
   items: OrderItem[];
   customerName: string;
   customerEmail: string;
   customerMobile?: string;
   shippingAddress: string;
+  time?: string;
+  paymentMethod?: 'cod' | 'online';
+  paymentStatus?: 'Pending' | 'Paid';
+  deliveryStartDate?: string;
+  deliveryEndDate?: string;
+}
+
+export interface Address {
+  id: string;
+  fullName: string;
+  mobile: string;
+  streetAddress: string;
+  apartment?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault: boolean;
 }
 
 export interface User {
@@ -78,7 +97,13 @@ export interface User {
   status: 'Active' | 'Suspended';
   dateRegistered: string;
   orderHistory: Order[];
-  savedAddresses?: string[];
+  savedAddresses?: Address[];
+  avatarUrl?: string;
+  preferences?: {
+    orderUpdates: boolean;
+    emailNotifications: boolean;
+    marketingOffers: boolean;
+  };
 }
 
 export type ScreenType = 'home' | 'shop' | 'details' | 'bulk' | 'contact' | 'about' | 'blog' | 'privacy-policy' | 'terms-conditions' | 'shipping-policy' | 'return-refund' | 'auth' | 'admin-login' | 'admin-dashboard' | 'faq' | 'track-order' | 'account' | 'orders';

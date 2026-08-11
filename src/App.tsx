@@ -16,7 +16,7 @@ import ShippingPolicyScreen from './components/ShippingPolicyScreen';
 import ReturnRefundScreen from './components/ReturnRefundScreen';
 import CartDrawer from './components/CartDrawer';
 import WishlistDrawer from './components/WishlistDrawer';
-import CheckoutModal from './components/CheckoutModal';
+import CheckoutScreen from './components/CheckoutScreen';
 import Footer from './components/Footer';
 import Notification from './components/Notification';
 import UserAuthScreen from './components/UserAuthScreen';
@@ -74,9 +74,8 @@ export default function App() {
   const [wishlist, setWishlist] = useState<Product[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [pendingBuyNow, setPendingBuyNow] = useState<{ product: Product, selectedWeight: string, quantity: number } | null>(null);
+  const [buyNowItem, setBuyNowItem] = useState<{ product: Product, selectedWeight: string, quantity: number, price: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Global Toast Notifications
@@ -238,7 +237,6 @@ export default function App() {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           setIsAuthModalOpen(false);
-          setPendingBuyNow(null);
         }
       };
       window.addEventListener('keydown', handleKeyDown);
@@ -255,17 +253,37 @@ export default function App() {
   useEffect(() => {
     const savedCart = localStorage.getItem('bihar_bite_cart');
     const savedWishlist = localStorage.getItem('bihar_bite_wishlist');
-    if (savedCart) setCart(JSON.parse(savedCart));
-    if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
-  }, []);
+    if (savedCart) {
+      try { setCart(JSON.parse(savedCart)); } catch (e) {}
+    }
+    if (savedWishlist) {
+      try {
+        const parsed = JSON.parse(savedWishlist);
+        if (Array.isArray(parsed)) {
+          // If the array contains IDs (strings), map them to products
+          if (parsed.length > 0 && typeof parsed[0] === 'string') {
+            const mappedProducts = parsed
+              .map(id => catalogProducts.find(p => p.id === id))
+              .filter(Boolean) as Product[];
+            setWishlist(mappedProducts);
+          } else {
+            // Legacy support: it already contained objects
+            setWishlist(parsed);
+          }
+        }
+      } catch (e) {}
+    }
+  }, [catalogProducts]);
 
   // Save changes to localStorage
   useEffect(() => {
-    localStorage.setItem('bihar_bite_cart', JSON.stringify(cart));
+    safeLocalStorageSet('bihar_bite_cart', JSON.stringify(cart));
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem('bihar_bite_wishlist', JSON.stringify(wishlist));
+    // Store ONLY product IDs to prevent localStorage bloat and stale data
+    const wishlistIds = wishlist.map(p => p.id);
+    safeLocalStorageSet('bihar_bite_wishlist', JSON.stringify(wishlistIds));
   }, [wishlist]);
 
   // DB Sync helper utilities
@@ -320,28 +338,14 @@ export default function App() {
     showToast(`Added ${quantity}x ${product.name} (${selectedWeight}) to basket!`, 'success');
   };
 
-  const handleRequireAuthForBuyNow = (product: Product, selectedWeight: string, quantity: number) => {
-    if (currentUser) {
-      handleAddToCart(product, selectedWeight, quantity);
-      setIsCartOpen(true);
-    } else {
-      setPendingBuyNow({ product, selectedWeight, quantity });
-      setIsAuthModalOpen(true);
-    }
+  const handleBuyNowInitiate = (product: Product, selectedWeight: string, quantity: number) => {
+    const price = product.weightPrices?.[selectedWeight] || product.price;
+    setBuyNowItem({ product, selectedWeight, quantity, price });
+    navigate('/checkout');
   };
-
-  useEffect(() => {
-    if (currentUser && pendingBuyNow) {
-      handleAddToCart(pendingBuyNow.product, pendingBuyNow.selectedWeight, pendingBuyNow.quantity);
-      setPendingBuyNow(null);
-      setIsAuthModalOpen(false);
-      setIsCartOpen(true);
-    }
-  }, [currentUser, pendingBuyNow, navigate]);
 
   const closeAuthModal = () => {
     setIsAuthModalOpen(false);
-    setPendingBuyNow(null);
   };
 
   const handleUpdateQuantity = (productId: string, weight: string, newQuantity: number) => {
@@ -363,12 +367,21 @@ export default function App() {
 
   // Wishlist operations
   const handleToggleWishlist = (product: Product) => {
-    const isSaved = wishlist.some((item) => item.id === product.id);
-    if (isSaved) {
-      setWishlist((prev) => prev.filter((item) => item.id !== product.id));
+    setWishlist((prev) => {
+      const isSaved = prev.some((item) => item.id === product.id);
+      if (isSaved) {
+        return prev.filter((item) => item.id !== product.id);
+      } else {
+        return [...prev, product];
+      }
+    });
+    
+    // Provide optimistic UI feedback using the stale closure state 
+    // (the actual state update above uses reliable prev state)
+    const isSavedStale = wishlist.some((item) => item.id === product.id);
+    if (isSavedStale) {
       showToast('Removed flavor from wishlist.', 'success');
     } else {
-      setWishlist((prev) => [...prev, product]);
       showToast('Saved flavor to your wishlist!', 'success');
     }
   };
@@ -379,69 +392,134 @@ export default function App() {
     setWishlist((prev) => prev.filter((item) => item.id !== product.id));
   };
 
-  // Checkout flows (Creates a real transaction order dynamically!)
-  const handleOrderSuccess = async (details: { name: string; email: string; phone: string; address: string }) => {
-    const orderItems = cart.map(item => ({
-      productId: item.product.id,
-      name: item.product.name,
-      quantity: item.quantity,
-      weight: item.selectedWeight,
-      price: item.price
-    }));
+  // Unified Checkout Handler for both Cart and Buy Now flows
+  const handleUnifiedOrderSuccess = async (details: { name: string; email: string; phone: string; address: string, saveAddress?: boolean, paymentMethod?: 'cod' | 'online' }): Promise<Order | void> => {
+    const sourceItems = buyNowItem 
+      ? [{
+          productId: buyNowItem.product.id,
+          name: buyNowItem.product.name,
+          quantity: buyNowItem.quantity,
+          weight: buyNowItem.selectedWeight,
+          price: buyNowItem.price
+        }]
+      : cart.map(item => ({
+          productId: item.product.id,
+          name: item.product.name,
+          quantity: item.quantity,
+          weight: item.selectedWeight,
+          price: item.price
+        }));
 
-    const totalCost = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    if (sourceItems.length === 0) return;
+
+    const totalCost = sourceItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const finalTotal = totalCost >= 999 ? totalCost : totalCost + 49;
 
-    // Use Supabase database if configured and user is logged in
+    let savedAddressAdded = false;
+    let updatedProfile = currentUser;
+
+    if (currentUser && details.saveAddress) {
+      const newAddress: Address = {
+        id: `addr-${Date.now()}`,
+        fullName: details.name,
+        mobile: details.phone,
+        streetAddress: details.address,
+        city: 'Extracted from address',
+        state: 'Extracted from address',
+        pincode: '000000',
+        isDefault: false
+      };
+      updatedProfile = {
+        ...currentUser,
+        savedAddresses: [...(currentUser.savedAddresses || []), newAddress]
+      };
+      savedAddressAdded = true;
+    }
+
+    const now = new Date();
+    const orderDate = now.toISOString().split('T')[0];
+    const orderTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() + 10);
+    const endDate = new Date(now);
+    endDate.setDate(endDate.getDate() + 12);
+    
+    const deliveryStartDate = startDate.toISOString().split('T')[0];
+    const deliveryEndDate = endDate.toISOString().split('T')[0];
+
+    const newOrder: Order = {
+      id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+      date: orderDate,
+      time: orderTime,
+      status: 'Pending',
+      total: finalTotal,
+      subtotal: totalCost,
+      shippingCharge: finalTotal - totalCost,
+      customerName: details.name,
+      customerEmail: details.email,
+      customerMobile: details.phone,
+      shippingAddress: details.address,
+      items: sourceItems,
+      paymentMethod: details.paymentMethod || 'cod',
+      paymentStatus: details.paymentMethod === 'online' ? 'Paid' : 'Pending',
+      deliveryStartDate,
+      deliveryEndDate
+    };
+
     if (isSupabaseConfigured && currentUser) {
       try {
-        const newDbOrder = await createOrderInDb(
+        // Fallback or attempt to augment newDbOrder with our local calculation 
+        // since Supabase schema might not immediately support all new fields.
+        let newDbOrder: Order = await createOrderInDb(
           currentUser.id,
           details.name,
           details.email,
           details.phone,
           details.address,
           finalTotal,
-          orderItems
+          sourceItems
         );
+        newDbOrder = { ...newOrder, ...newDbOrder }; // merge to keep local fields
 
-        // Sync local states
-        const updatedProfile = {
-          ...currentUser,
-          orderHistory: [newDbOrder, ...currentUser.orderHistory]
-        };
-        setCurrentUser(updatedProfile);
-        localStorage.setItem('bihar_bite_user_session', JSON.stringify(updatedProfile));
+        if (updatedProfile) {
+          updatedProfile = {
+            ...updatedProfile,
+            orderHistory: [newDbOrder, ...(updatedProfile.orderHistory || [])]
+          };
+          setCurrentUser(updatedProfile);
+          localStorage.setItem('bihar_bite_user_session', JSON.stringify(updatedProfile));
+          
+          const updatedUsers = users.map(u => u.id === updatedProfile?.id ? updatedProfile : u);
+          persistUsers(updatedUsers);
+        }
         
         setOrders(prev => [newDbOrder, ...prev]);
-        setCart([]);
-        showToast('Secure Order placed successfully via Supabase! Check your profile history.', 'success');
-        return;
+        if (buyNowItem) setBuyNowItem(null);
+        else setCart([]);
+        showToast('Secure Order placed successfully! Check your profile history.', 'success');
+        return newDbOrder;
       } catch (err: any) {
         console.error('Supabase order creation failed, trying local fallback:', err);
         showToast(`Supabase order failed: ${err.message}. Saving locally...`, 'error');
       }
     }
 
-    const newOrder: Order = {
-      id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-      date: new Date().toISOString().split('T')[0],
-      status: 'Pending',
-      total: finalTotal,
-      customerName: details.name,
-      customerEmail: details.email,
-      customerMobile: details.phone,
-      shippingAddress: details.address,
-      items: orderItems
-    };
-
-    // 1. Add order to system list
     const updatedOrders = [newOrder, ...orders];
     persistOrders(updatedOrders);
 
-    // 2. Append history to matching registered user by email (if exists)
+    if (updatedProfile && updatedProfile.email.toLowerCase() === details.email.toLowerCase()) {
+      updatedProfile = {
+        ...updatedProfile,
+        orderHistory: [newOrder, ...(updatedProfile.orderHistory || [])]
+      };
+      setCurrentUser(updatedProfile);
+      localStorage.setItem('bihar_bite_user_session', JSON.stringify(updatedProfile));
+    }
+
     const updatedUsers = users.map(user => {
       if (user.email.toLowerCase() === details.email.toLowerCase()) {
+        if (updatedProfile && user.id === updatedProfile.id) return updatedProfile;
         return {
           ...user,
           orderHistory: [newOrder, ...user.orderHistory]
@@ -451,18 +529,10 @@ export default function App() {
     });
     persistUsers(updatedUsers);
 
-    // 3. Sync logged in session state
-    if (currentUser && currentUser.email.toLowerCase() === details.email.toLowerCase()) {
-      const updatedProfile = {
-        ...currentUser,
-        orderHistory: [newOrder, ...currentUser.orderHistory]
-      };
-      setCurrentUser(updatedProfile);
-      localStorage.setItem('bihar_bite_user_session', JSON.stringify(updatedProfile));
-    }
-
-    setCart([]);
-    showToast('Secure Order placed successfully! Check your profile history.', 'success');
+    if (buyNowItem) setBuyNowItem(null);
+    else setCart([]);
+    showToast('Secure Order placed successfully!', 'success');
+    return newOrder;
   };
 
   // Newsletter subscription
@@ -804,9 +874,20 @@ Message: ${details.message}`;
                 onToggleWishlist={handleToggleWishlist}
                 onAddToCart={handleAddToCart}
                 setNotification={setNotification}
-                onBuyNowAuthFlow={handleRequireAuthForBuyNow}
+                onBuyNowAuthFlow={handleBuyNowInitiate}
                 currentUser={currentUser}
                 setIsCartOpen={setIsCartOpen}
+              />
+            } />
+
+            <Route path="/checkout" element={
+              <CheckoutScreen 
+                buyNowItem={buyNowItem}
+                cart={cart}
+                onOrderSuccess={handleUnifiedOrderSuccess}
+                currentUser={currentUser}
+                setScreen={setScreen}
+                onClose={() => { setBuyNowItem(null); navigate(-1); }}
               />
             } />
 
@@ -827,8 +908,11 @@ Message: ${details.message}`;
             <Route path="/account" element={
               <AccountScreen 
                 currentUser={currentUser} 
+                onUpdateUser={setCurrentUser}
                 onLogout={handleUserLogout}
-                wishlistCount={wishlist.length}
+                wishlistProducts={wishlist}
+                onToggleWishlist={handleToggleWishlist}
+                onAddToCart={handleAddToCart}
                 orders={orders.filter(o => o.customerEmail === currentUser?.email || o.customerMobile === currentUser?.mobile)}
                 onOpenAuthModal={() => setIsAuthModalOpen(true)}
               />
@@ -901,7 +985,7 @@ Message: ${details.message}`;
         onRemoveItem={handleRemoveItem}
         onCheckout={() => {
           setIsCartOpen(false);
-          setIsCheckoutOpen(true);
+          navigate('/checkout');
         }}
       />
 
@@ -911,14 +995,6 @@ Message: ${details.message}`;
         wishlist={wishlist}
         onRemoveFromWishlist={handleToggleWishlist}
         onMoveToCart={handleMoveToCart}
-      />
-
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        cart={cart}
-        onOrderSuccess={handleOrderSuccess}
-        setScreen={setScreen}
       />
 
       {/* Global alert toaster notifications */}
