@@ -6,7 +6,7 @@ const processSteps = [
   { 
     title: "Harvesting from Bihar Wetlands", 
     step: "Step 1", 
-    video: "/videos/01.mp4", 
+    video: "/videos/process-of-makhana.mp4", 
     duration: "0:42", 
     desc: "Collected traditionally from lotus ponds by skilled farmers." 
   },
@@ -47,7 +47,7 @@ function ProcessCard({ step, i, onClick }: { step: any; i: number; onClick: () =
           videoRef.current?.pause();
         }
       });
-    }, { threshold: 0.5 });
+    }, { threshold: 0.8 });
     
     observer.observe(videoRef.current);
     return () => observer.disconnect();
@@ -65,8 +65,7 @@ function ProcessCard({ step, i, onClick }: { step: any; i: number; onClick: () =
       <video 
         ref={videoRef}
         src={step.video} 
-        autoPlay
-        preload="metadata"
+        preload="none"
         muted
         playsInline
         loop

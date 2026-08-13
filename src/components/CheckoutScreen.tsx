@@ -300,13 +300,6 @@ export default function CheckoutScreen({
                 <div className="space-y-4 mb-8">
                   {checkoutItems.map((item, idx) => (
                     <div key={idx} className="flex gap-6 items-center p-4 border border-stone-100 rounded-2xl bg-[#FAF8F4]/50">
-                      <div className="w-24 h-24 bg-white rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-stone-100">
-                        <img 
-                          src={item.product.galleryImages?.[0] || item.product.image || '/images/hero/03.png'} 
-                          alt={item.product.name}
-                          className="max-w-full max-h-full object-contain p-2"
-                        />
-                      </div>
                       <div className="flex-1">
                         <h3 className="font-serif font-bold text-lg text-[#143A2A] mb-1">{item.product.name}</h3>
                         <p className="text-stone-500 text-xs font-semibold uppercase tracking-wider mb-2">

@@ -29,7 +29,7 @@ function SocialReelCard({ reel, idx, onClick }: { reel: any; idx: number; onClic
           videoRef.current?.pause();
         }
       });
-    }, { threshold: 0.5 });
+    }, { threshold: 0.7 });
     
     observer.observe(videoRef.current);
     return () => observer.disconnect();
@@ -48,11 +48,10 @@ function SocialReelCard({ reel, idx, onClick }: { reel: any; idx: number; onClic
       <video 
         ref={videoRef}
         src={reel.video}
-        autoPlay
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="none"
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.08]"
       />
       
@@ -76,6 +75,37 @@ function SocialReelCard({ reel, idx, onClick }: { reel: any; idx: number; onClic
 
 
     </motion.div>
+  );
+}
+
+function FeaturedProductVideo({ src }: { src: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (!src || !videoRef.current) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          videoRef.current?.play().catch(() => {});
+        } else {
+          videoRef.current?.pause();
+        }
+      });
+    }, { threshold: 0.7 });
+    observer.observe(videoRef.current);
+    return () => observer.disconnect();
+  }, [src]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      muted
+      loop
+      playsInline
+      preload="none"
+      className="w-full h-full object-contain object-center group-hover:scale-[1.04] transition-transform duration-300 ease-out drop-shadow-sm"
+    />
   );
 }
 
@@ -460,15 +490,7 @@ export default function HomeScreen({
                   <img src="/images/hero/03.png" aria-hidden="true" className="absolute top-6 right-6 w-16 opacity-0 group-hover:opacity-40 transition-all duration-500 group-hover:rotate-12 blur-[1px] pointer-events-none" />
 
                   {prod.video ? (
-                    <video
-                      src={prod.video}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                      className="w-full h-full object-contain object-center group-hover:scale-[1.04] transition-transform duration-300 ease-out drop-shadow-sm"
-                    />
+                    <FeaturedProductVideo src={prod.video} />
                   ) : (
                     <img 
                       src={coverImage} 
@@ -563,7 +585,7 @@ export default function HomeScreen({
           {/* Reels Row */}
           <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 custom-scrollbar md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible md:snap-none md:gap-[32px] md:pb-0 px-4 md:px-0">
             {[
-              { video: "/videos/process-of-makhana.mp4" },
+              { video: "/videos/social-04.mp4" },
               { video: "/videos/social-01.mp4" },
               { video: "/videos/social-02.mp4" },
               { video: "/videos/social-03.mp4" }

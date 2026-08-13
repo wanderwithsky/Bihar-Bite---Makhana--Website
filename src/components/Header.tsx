@@ -261,9 +261,14 @@ export default function Header({
                 </button>
                 <button 
                   onClick={() => setIsWishlistOpen(true)}
-                  className="w-11 h-11 flex items-center justify-center text-[#4A4A3A] hover:text-[#7C8464] transition-colors rounded-full hover:bg-stone-100"
+                  className="w-11 h-11 flex items-center justify-center text-[#4A4A3A] hover:text-[#7C8464] transition-colors rounded-full hover:bg-stone-100 relative"
                 >
-                  <Heart className="w-[18px] h-[18px]" strokeWidth={1.5} />
+                  <Heart className={`w-[18px] h-[18px] ${wishlist.length > 0 ? 'fill-[#7C8464] text-[#7C8464]' : ''}`} strokeWidth={1.5} />
+                  {wishlist.length > 0 && (
+                    <span className="absolute top-1.5 right-1.5 bg-[#7C8464] text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                      {wishlist.length}
+                    </span>
+                  )}
                 </button>
                 <button 
                   onClick={() => {

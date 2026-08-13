@@ -19,7 +19,7 @@ export default function WishlistDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden font-sans">
+    <div className="fixed inset-x-0 top-[64px] h-[calc(100dvh-64px)] md:inset-0 md:top-0 md:h-[100dvh] z-[200] overflow-hidden font-sans">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
@@ -27,19 +27,26 @@ export default function WishlistDrawer({
       />
 
       <div className="absolute inset-y-0 right-0 max-w-full flex">
-        <div className="w-screen max-w-md bg-surface flex flex-col shadow-xl">
+        <div className="w-screen max-w-md bg-surface flex flex-col shadow-xl relative">
+          
+          {/* TOP-LEFT CLOSE BUTTON */}
+          <button 
+            onClick={onClose}
+            className="absolute top-4 left-4 z-50 p-2 rounded-full hover:bg-black/5 text-[#4A4A3A] transition-colors flex items-center justify-center"
+            aria-label="Close wishlist"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
           {/* Header */}
-          <div className="px-6 py-5 border-b border-outline-variant/30 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="px-6 pt-16 pb-6 border-b border-outline-variant/30 flex flex-col items-center justify-center text-center">
+            <div className="flex items-center gap-2 mb-1">
               <Heart className="w-5 h-5 text-secondary fill-secondary" />
-              <h2 className="text-lg font-bold text-primary">Your Wishlist</h2>
+              <h2 className="text-xl font-bold text-primary">Your Wishlist</h2>
             </div>
-            <button 
-              onClick={onClose}
-              className="p-1 rounded-full hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {wishlist.length > 0 && (
+              <p className="text-sm font-medium text-stone-500">{wishlist.length} Saved Products</p>
+            )}
           </div>
 
           {/* Content */}
