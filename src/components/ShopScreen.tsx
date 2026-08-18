@@ -13,6 +13,8 @@ interface ShopScreenProps {
   onToggleWishlist: (product: Product) => void;
   onAddToCart: (product: Product, selectedWeight: string) => void;
   searchQuery: string;
+  isProductsLoading?: boolean;
+  productsError?: string | null;
 }
 
 export default function ShopScreen({
@@ -25,16 +27,33 @@ export default function ShopScreen({
   onToggleWishlist,
   onAddToCart,
   searchQuery,
+  isProductsLoading = false,
+  productsError = null
 }: ShopScreenProps) {
   const navigate = useNavigate();
   // Local state for sidebar filters
   const [localCategory, setLocalCategory] = useState<Product['category'] | 'All'>(selectedCategory);
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [selectedPackSizes, setSelectedPackSizes] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState<number>(2000);
+  const [maxPrice, setMaxPrice] = useState<number>(0); // 0 means use dynamic max
   const [sortBy, setSortBy] = useState<string>('featured');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
   const [cardSelectedWeights, setCardSelectedWeights] = useState<{ [productId: string]: string }>({});
+
+  // Derive dynamic maximum price from fetched products
+  const maxPossiblePrice = Math.max(
+    2000,
+    ...products.flatMap(p => [
+      p.price,
+      ...(Object.values((p as any).weightPrices || {}) as number[])
+    ])
+  );
+
+  useEffect(() => {
+    if (products.length > 0 && maxPrice === 0) {
+      setMaxPrice(maxPossiblePrice);
+    }
+  }, [products, maxPossiblePrice, maxPrice]);
 
   // Sync category state from header nav clicks
   useEffect(() => {
@@ -76,7 +95,7 @@ export default function ShopScreen({
     setSelectedCategory('All');
     setSelectedFlavors([]);
     setSelectedPackSizes([]);
-    setMaxPrice(2000);
+    setMaxPrice(maxPossiblePrice);
   };
 
   // Filtering & Sorting Logic
@@ -133,7 +152,7 @@ export default function ShopScreen({
     // 5. Price filter
     const activeWeight = cardSelectedWeights[(product as any).slug || product.id] || product.weights?.[0] || (product as any).weight || '100g';
     const activePrice = (product as any).weightPrices?.[activeWeight] || product.price;
-    if (activePrice > maxPrice) {
+    if (maxPrice > 0 && activePrice > maxPrice) {
       console.log(`[Filter Excluded] Product: ${product.name} excluded. Price ₹${activePrice} > Max ₹${maxPrice}`);
       return false;
     }
@@ -280,14 +299,14 @@ export default function ShopScreen({
           <div className="space-y-2 pt-4 border-t border-outline-variant/10">
             <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-on-surface-variant">
               <span>Max Price</span>
-              <span className="text-primary font-mono font-bold">₹{maxPrice}</span>
+              <span className="text-primary font-mono font-bold">₹{maxPrice === 0 ? maxPossiblePrice : maxPrice}</span>
             </div>
             <input 
               type="range"
               min={100}
-              max={2000}
-              step={50}
-              value={maxPrice}
+              max={maxPossiblePrice}
+              step={100}
+              value={maxPrice === 0 ? maxPossiblePrice : maxPrice}
               onChange={(e) => setMaxPrice(Number(e.target.value))}
               className="w-full h-1.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-secondary"
             />
@@ -322,7 +341,27 @@ export default function ShopScreen({
         </div>
 
         {/* Product Grid */}
-        {sortedProducts.length === 0 ? (
+        {isProductsLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-outline-variant/20">
+            <div className="w-12 h-12 border-4 border-outline-variant/30 border-t-primary rounded-full animate-spin mb-4"></div>
+            <h4 className="text-lg font-bold text-primary">Loading Products...</h4>
+            <p className="text-sm text-on-surface-variant mt-1">Fetching the latest luxurious flavors from Supabase.</p>
+          </div>
+        ) : productsError ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-outline-variant/20">
+            <div className="w-12 h-12 text-error/80 mx-auto mb-4 flex items-center justify-center rounded-full bg-error/10">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h4 className="text-lg font-bold text-error">{productsError}</h4>
+            <p className="text-sm text-on-surface-variant mt-1">Please try refreshing the page.</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-4 px-6 py-2 bg-primary text-white text-xs font-semibold rounded-full hover:bg-primary-container transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : sortedProducts.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-outline-variant/20">
             <Search className="w-12 h-12 text-outline-variant/50 mx-auto mb-4 stroke-1" />
             <h4 className="text-lg font-bold text-primary">No Makhana found</h4>
@@ -350,16 +389,16 @@ export default function ShopScreen({
                 >
                   {/* Image, Badges & Wishlist Trigger */}
                   <div className="aspect-square bg-surface-container-low overflow-hidden relative cursor-pointer">
-                    {(product as any).video ? (
+                    {product.video ? (
                       <video
-                        src={(product as any).video}
+                        src={product.video}
                         autoPlay
                         muted
                         loop
                         playsInline
                         preload="metadata"
                         className="w-full h-full object-cover group-hover/card:scale-102 transition-transform duration-500"
-                        onClick={() => navigate(`/product/${(product as any).slug || product.id}`)}
+                        onClick={() => navigate(`/product/${product.id}`)}
                       />
                     ) : (
                       <img 

@@ -2,7 +2,7 @@ import { useState, ReactNode, useEffect } from 'react';
 import { Product, User, Order } from '../../types';
 import {
   TrendingUp, Layers, Users, ShoppingBag, Receipt, MessageSquare,
-  Settings, X, Edit2
+  Settings, X, Edit2, User as UserIcon
 } from 'lucide-react';
 import AdminHeader from './AdminHeader';
 import AdminOverviewTab from './AdminOverviewTab';
@@ -11,6 +11,7 @@ import AdminOrdersTab from './AdminOrdersTab';
 import AdminCustomersTab from './AdminCustomersTab';
 import AdminInvoicesTab from './AdminInvoicesTab';
 import AdminInquiriesTab from './AdminInquiriesTab';
+import AdminGuestCustomersTab from './AdminGuestCustomersTab';
 import { fetchInquiriesFromDb } from '../../lib/supabase';
 
 interface AdminLayoutProps {
@@ -29,13 +30,14 @@ interface AdminLayoutProps {
   adminEmail?: string;
 }
 
-export type AdminSection = 'overview' | 'products' | 'orders' | 'customers' | 'invoices' | 'inquiries' | 'settings';
+export type AdminSection = 'overview' | 'products' | 'orders' | 'customers' | 'guest-customers' | 'invoices' | 'inquiries' | 'settings';
 
 const NAV_ITEMS: { id: AdminSection; name: string; icon: ReactNode; description: string }[] = [
   { id: 'overview', name: 'Overview', icon: <TrendingUp className="w-4 h-4" />, description: 'Analytics & summary' },
   { id: 'products', name: 'Products', icon: <Layers className="w-4 h-4" />, description: 'Catalog management' },
   { id: 'orders', name: 'Orders', icon: <ShoppingBag className="w-4 h-4" />, description: 'Dispatch & fulfillment' },
   { id: 'customers', name: 'Customers', icon: <Users className="w-4 h-4" />, description: 'User directory' },
+  { id: 'guest-customers', name: 'Guest Customers', icon: <UserIcon className="w-4 h-4" />, description: 'Guest checkout records' },
   { id: 'invoices', name: 'Invoices & Billing', icon: <Receipt className="w-4 h-4" />, description: 'Billing records' },
   { id: 'inquiries', name: 'Inquiries & Leads', icon: <MessageSquare className="w-4 h-4" />, description: 'Contact & wholesale' },
   { id: 'settings', name: 'Settings', icon: <Settings className="w-4 h-4" />, description: 'Store configuration' },
@@ -197,6 +199,9 @@ export default function AdminLayout(props: AdminLayoutProps) {
             )}
             {activeSection === 'customers' && (
               <AdminCustomersTab users={users} onUpdateUserStatus={onUpdateUserStatus} showToast={showToast} />
+            )}
+            {activeSection === 'guest-customers' && (
+              <AdminGuestCustomersTab orders={orders} />
             )}
             {activeSection === 'invoices' && (
               <AdminInvoicesTab orders={orders} />

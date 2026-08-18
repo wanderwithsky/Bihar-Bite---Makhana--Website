@@ -108,7 +108,7 @@ export default function ReturnRefundScreen({ setScreen }: LegalPageProps) {
               <HelpCircle className="w-5 h-5 text-[#7C8464]" />
               <div>
                 <span className="text-[10px] uppercase text-stone-400 block font-bold">Instant Helpline</span>
-                <span className="text-xs text-stone-800 font-semibold">+91 91234 56789</span>
+                <span className="text-xs text-stone-800 font-semibold">+91 78804 54502</span>
               </div>
             </div>
           </div>

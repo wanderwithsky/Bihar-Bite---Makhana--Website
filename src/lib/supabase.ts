@@ -35,7 +35,8 @@ export function mapDbProductToProduct(row: any): Product {
     category: row.category,
     flavors: Array.isArray(row.flavors) ? row.flavors : [],
     image: row.image || 'https://images.unsplash.com/photo-1586201375761-83865001e31c?q=80&w=600&auto=format&fit=crop',
-    galleryImages: Array.isArray(row.gallery_images) ? row.gallery_images : [],
+    video: row.video || undefined,
+    galleryImages: (row.video ? [row.video] : []).concat(Array.isArray(row.gallery_images) ? row.gallery_images : []),
     weights: weights,
     weightPrices: weightPrices,
     rating: Number(row.rating) || 5.0,
@@ -64,249 +65,6 @@ export function mapDbProductToProduct(row: any): Product {
 // PRODUCT DATABASE QUERIES
 // ====================================================================
 
-export async function seedDefaultProducts() {
-  if (!supabase) return;
-  
-  const seedData = [
-    {
-      id: 'himalayan-pink-salt',
-      name: 'Himalayan Pink Salt Roasted',
-      description: 'Delicately roasted with subtle hints of mineral-rich pink salt. Perfect crunch and eye-safe twilight aesthetic.',
-      price: 349,
-      original_price: 399,
-      category: 'Roasted',
-      flavors: ['Himalayan Salt'],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAE8NZSYfiYMC09NWAibdLNv51ejq_Qp1-IFFWffR4LcaiYNtj0A3_mCmJVgCb__MAvXOpTgarPpFjmIQpgJTjBptORCKIGkbJT4cDDgacGBmknR6wR0eRTBJ96olvbu-8lFwFRqLLWRWxjRLJXlf9LBvaW7avfUswRCpqzZx_O_wMbqAcfYXd9s9_DDpMApj1AMKne5x_XkoB3G9xA9e1hGovyZj0G8ZBQ5Ed4cULYicJxBjWcGX6Hpw',
-      gallery_images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuAeFYgCxP5A0_pK4KhY5-yEMquxVfiXvJ1Qrp_kVb_nKFR-Y-AAPJYcuBC1e5YsDgLx9lXC0eiu7CylCOb3BdqEktK541jAnk4rwBd-CGzJIBxoEMGV2jyCGhMgKqZmToiHZYVqzEe2MGvzIZ8jglsVo9GQEw5DLUMdn7gB7wuOqdZGAQY3gkKg4CIA2-2qJ8I5ORNEB83AfDF3N1eOfKNxIO1mILrYWIRgqfSJsZ7NioB0J78v-xEswg',
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuC9fWhGNNgcRjoK8W0ntw5HuZIHHzOjIAjF_5CeQNpwRclfgIM-DGSWsYcUXttaNfcj4knXYntQJNTUZ9Sj9rdogL1zqKws6tlA836Yve5E6KyEja20C5pevXbFrS881vUvNRt-DyMy1o2eI3px6MKu1iYX3I6md1dweaVabMB4bm-HcvX4QEsIR-6sy5fpL7paQQiN43G49oan21Q2TVfE2KBts-vp64609N39yApDotaNN0q-aNBLbQ'
-      ],
-      weights: ['100g', '250g', '500g'],
-      weight_prices: {
-        '100g': 149,
-        '250g': 349,
-        '500g': 649
-      },
-      rating: 4.8,
-      review_count: 3,
-      is_bestseller: true,
-      is_new: false,
-      tagline: 'Delicate and perfectly crunchy',
-      nutritional_info: {
-        calories: '347 kcal',
-        protein: '9.7g',
-        fiber: '14.5g',
-        fat: '0.1g'
-      },
-      status: 'Active'
-    },
-    {
-      id: 'aged-cheddar-herb',
-      name: 'Aged Cheddar & Herb',
-      description: 'Rich, savory profile with premium aged cheddar and a blend of organic herbs scatter-dusted beautifully.',
-      price: 389,
-      original_price: 429,
-      category: 'Flavoured',
-      flavors: ['Cheese'],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBBpX6KqIkd4aGLgWBUKzrmD2Q5i5rlv1_NMZqu4KSkS1WHJ2jxozKLS9BURwvjst8VcBo8reqRoN9UhKLrDzCuZOq5l4Vm0Xo0PPOPzGYXmGNPbVktqouHkgkDI9XxEwy6bPYWo0E634IkX3cZRK3pU0d-zcx78dGXywOWip4GDs-VwavWBLFgpC6YbzBKB56ahX3UgM2shrOosvB2ehIJBkjy-Wb9KmGlyyjBOoEhvrq_0chKG9QVWg',
-      gallery_images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuBBpX6KqIkd4aGLgWBUKzrmD2Q5i5rlv1_NMZqu4KSkS1WHJ2jxozKLS9BURwvjst8VcBo8reqRoN9UhKLrDzCuZOq5l4Vm0Xo0PPOPzGYXmGNPbVktqouHkgkDI9XxEwy6bPYWo0E634IkX3cZRK3pU0d-zcx78dGXywOWip4GDs-VwavWBLFgpC6YbzBKB56ahX3UgM2shrOosvB2ehIJBkjy-Wb9KmGlyyjBOoEhvrq_0chKG9QVWg'
-      ],
-      weights: ['100g', '250g', '500g'],
-      weight_prices: {
-        '100g': 169,
-        '250g': 389,
-        '500g': 729
-      },
-      rating: 4.7,
-      review_count: 1,
-      is_bestseller: false,
-      is_new: false,
-      tagline: 'Savory cheese delight',
-      nutritional_info: {
-        calories: '390 kcal',
-        protein: '10.2g',
-        fiber: '12.8g',
-        fat: '4.5g'
-      },
-      status: 'Active'
-    },
-    {
-      id: 'premium-raw-phool',
-      name: 'Premium Raw Phool',
-      description: 'Unroasted, raw lotus seeds. Ideal for cooking authentic curries, kheer, or roasting at home.',
-      price: 599,
-      original_price: 699,
-      category: 'Plain',
-      flavors: [],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD3qNYzTGVKHqibfdRoCjWoVL1W1xMxcJXVueJ8SDASbkfYI5SmxKmV_-7GAax1YSEWpGAhHE6l7AuziuxXyBuny6tj6v_PrkdtMjYmix8iivpI8HsFy2MUoDvy-hN_kWPB0UV1f0sOTw63zbPBJvhZMefS2iP07s5LvHycFpBQENYmtH1YpcJg_PxVy2LZdMAJSRj7vOJiZ_APU_voXfUvX9-ICrgZaaXwdrJBfKcmNuRLO971PFWHPg',
-      gallery_images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuD3qNYzTGVKHqibfdRoCjWoVL1W1xMxcJXVueJ8SDASbkfYI5SmxKmV_-7GAax1YSEWpGAhHE6l7AuziuxXyBuny6tj6v_PrkdtMjYmix8iivpI8HsFy2MUoDvy-hN_kWPB0UV1f0sOTw63zbPBJvhZMefS2iP07s5LvHycFpBQENYmtH1YpcJg_PxVy2LZdMAJSRj7vOJiZ_APU_voXfUvX9-ICrgZaaXwdrJBfKcmNuRLO971PFWHPg'
-      ],
-      weights: ['250g', '500g', '1kg'],
-      weight_prices: {
-        '250g': 179,
-        '500g': 329,
-        '1kg': 599
-      },
-      rating: 4.9,
-      review_count: 1,
-      is_bestseller: false,
-      is_new: true,
-      tagline: 'Pristine raw fox nuts',
-      nutritional_info: {
-        calories: '310 kcal',
-        protein: '11.1g',
-        fiber: '16.0g',
-        fat: '0.1g'
-      },
-      status: 'Active'
-    },
-    {
-      id: 'classic-raw-makhana',
-      name: 'Classic Raw Makhana',
-      description: 'The pure, unadulterated crunch of nature. Lightly airy, raw phool makhana ready for custom seasoning.',
-      price: 199,
-      original_price: 249,
-      category: 'Plain',
-      flavors: [],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBT3lfMzCIqYySdIXGHmYYJEhvR_MENrENhVwKei1Qcgi1G_1o1aFHUObYbWgvWShC-UPm1DArLelvtkoM8U9o2IRwHgA3Ji58sI6NDtXILTiSECVDiev1OqyLSfYmHefU4x7VmqwtH5cK9PS870GBLUVl2tPziLlgWdbPxBENkV3x9_NrtWeAxgslJNUbOWSAy85W9XRbhl98aILphq6wwEf0hHh2WwDKLR2F4X6NNPfeO0KZsMYWBag',
-      gallery_images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuBT3lfMzCIqYySdIXGHmYYJEhvR_MENrENhVwKei1Qcgi1G_1o1aFHUObYbWgvWShC-UPm1DArLelvtkoM8U9o2IRwHgA3Ji58sI6NDtXILTiSECVDiev1OqyLSfYmHefU4x7VmqwtH5cK9PS870GBLUVl2tPziLlgWdbPxBENkV3x9_NrtWeAxgslJNUbOWSAy85W9XRbhl98aILphq6wwEf0hHh2WwDKLR2F4X6NNPfeO0KZsMYWBag'
-      ],
-      weights: ['100g', '250g', '500g'],
-      weight_prices: {
-        '100g': 99,
-        '250g': 199,
-        '500g': 379
-      },
-      rating: 4.6,
-      review_count: 0,
-      is_bestseller: false,
-      is_new: false,
-      tagline: 'Standard airy superfood',
-      nutritional_info: {
-        calories: '315 kcal',
-        protein: '10.8g',
-        fiber: '15.2g',
-        fat: '0.1g'
-      },
-      status: 'Active'
-    },
-    {
-      id: 'smoked-peri-peri',
-      name: 'Smoked Peri-Peri Makhana',
-      description: 'Bold, spicy, and roasted with authentic hot African bird-eye chili blend. Irresistible smoky tang!',
-      price: 279,
-      original_price: 329,
-      category: 'Flavoured',
-      flavors: ['Peri Peri'],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9Wsnj84UebVbOWYW8aChTcdEpCLjduYjSDQJUHS4CvIlLyJn8mvy5O1HOD0Ei5EKDn90WpFmK3VqOFbWgmKJT_siLqlmZFc-fhxFaQ5Mdtz1SDuZTnwd6P_GgpRJNmnDUDXSXWNA4ZWvwyvpC5IMU1J1fAjN9EQayxgNFCnmOvUMeScGUzq0y3eLpgLYbr3SL93ZIrdyMxWDoJ-v8dZd1XqYt46lSanl4WCwkHUvsFq34WQbVSwMXEQ',
-      gallery_images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuD9Wsnj84UebVbOWYW8aChTcdEpCLjduYjSDQJUHS4CvIlLyJn8mvy5O1HOD0Ei5EKDn90WpFmK3VqOFbWgmKJT_siLqlmZFc-fhxFaQ5Mdtz1SDuZTnwd6P_GgpRJNmnDUDXSXWNA4ZWvwyvpC5IMU1J1fAjN9EQayxgNFCnmOvUMeScGUzq0y3eLpgLYbr3SL93ZIrdyMxWDoJ-v8dZd1XqYt46lSanl4WCwkHUvsFq34WQbVSwMXEQ'
-      ],
-      weights: ['100g', '250g', '500g'],
-      weight_prices: {
-        '100g': 129,
-        '250g': 279,
-        '500g': 519
-      },
-      rating: 4.8,
-      review_count: 0,
-      is_bestseller: true,
-      is_new: false,
-      tagline: 'Zesty smoked bird-eye chili',
-      nutritional_info: {
-        calories: '365 kcal',
-        protein: '9.5g',
-        fiber: '13.9g',
-        fat: '1.2g'
-      },
-      status: 'Active'
-    },
-    {
-      id: 'heritage-tasting-box',
-      name: 'Heritage Tasting Box',
-      description: 'An elegant premium green gift pack featuring an assortment of our best-selling roasted and seasoned Makhanas.',
-      price: 899,
-      original_price: 999,
-      category: 'Gift Packs',
-      flavors: [],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJXFR3KdlRMguX5dgzWG3eyPFsfcvuHZucWY5JywKIjSYUl1S9v-op5eetwjmwmKGJNB0u40qzyqH57ag26tMXA3BTXz_nQq6XQffo1QyMYIUnk-fScHsSv06qSF2c29zSfdIkJVbQxrBvpB5CB9PaRK_abV3ohv2lw0P__qKRpuMGJzI9E2pkgs-wFQSkliynI7KIgJGSF13K8mDedq8Vv9QjKqXS2GyF8HqDVi1Z3UBWK8j2be95PQ',
-      gallery_images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuAJXFR3KdlRMguX5dgzWG3eyPFsfcvuHZucWY5JywKIjSYUl1S9v-op5eetwjmwmKGJNB0u40qzyqH57ag26tMXA3BTXz_nQq6XQffo1QyMYIUnk-fScHsSv06qSF2c29zSfdIkJVbQxrBvpB5CB9PaRK_abV3ohv2lw0P__qKRpuMGJzI9E2pkgs-wFQSkliynI7KIgJGSF13K8mDedq8Vv9QjKqXS2GyF8HqDVi1Z3UBWK8j2be95PQ'
-      ],
-      weights: ['1 Pack'],
-      weight_prices: {
-        '1 Pack': 899
-      },
-      rating: 4.9,
-      review_count: 0,
-      is_bestseller: false,
-      is_new: false,
-      tagline: 'Exquisite festive gifting box',
-      nutritional_info: {
-        calories: 'N/A',
-        protein: 'Mixed Pack',
-        fiber: 'High Fiber',
-        fat: 'Low Fat'
-      },
-      status: 'Active'
-    }
-  ];
-
-  const { error } = await supabase
-    .from('products')
-    .insert(seedData);
-    
-  if (error) {
-    console.error('Error seeding products:', error);
-    throw error;
-  }
-}
-
-export async function seedDefaultReviews() {
-  if (!supabase) return;
-  const reviewsSeed = [
-    {
-      product_id: 'himalayan-pink-salt',
-      user_name: 'Aarav Sharma',
-      rating: 5,
-      date: '2026-06-15',
-      comment: 'Absolutely brilliant crunch and the pink salt taste is very balanced!'
-    },
-    {
-      product_id: 'himalayan-pink-salt',
-      user_name: 'Priya Patel',
-      rating: 5,
-      date: '2026-07-02',
-      comment: 'Very high quality, large seeds. Best makhana brand I have tasted.'
-    },
-    {
-      product_id: 'himalayan-pink-salt',
-      user_name: 'Rohan Mehra',
-      rating: 5,
-      date: '2026-07-10',
-      comment: 'Pure, clean, and delicious snack. Sourced from authentic ponds!'
-    },
-    {
-      product_id: 'aged-cheddar-herb',
-      user_name: 'Meera Sen',
-      rating: 5,
-      date: '2026-05-18',
-      comment: 'Smells amazing! The real cheese powder makes a huge difference.'
-    },
-    {
-      product_id: 'premium-raw-phool',
-      user_name: 'Karan J.',
-      rating: 5,
-      date: '2026-07-01',
-      comment: 'Very large white seeds with minimal waste. Extremely pure.'
-    }
-  ];
-
-  await supabase.from('reviews').insert(reviewsSeed);
-}
 
 async function mapAndAttachReviews(productsData: any[]): Promise<Product[]> {
   if (!supabase) return [];
@@ -340,32 +98,26 @@ async function mapAndAttachReviews(productsData: any[]): Promise<Product[]> {
 export async function fetchProducts(): Promise<Product[]> {
   if (!supabase) return [];
   try {
+    console.log('[PRODUCTS] Fetching from Supabase...');
     const { data: productsData, error: productsError } = await supabase
       .from('products')
       .select('*')
       .eq('status', 'Active');
 
-    if (productsError) throw productsError;
-
-    if (!productsData || productsData.length === 0) {
-      console.log('Products table empty. Seeding defaults...');
-      await seedDefaultProducts();
-      try {
-        await seedDefaultReviews();
-      } catch (reviewErr) {
-        console.error('Failed to seed default reviews:', reviewErr);
-      }
-      
-      const { data: reFetched, error: reError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('status', 'Active');
-        
-      if (reError) throw reError;
-      return mapAndAttachReviews(reFetched || []);
+    if (productsError) {
+      console.error('Supabase products error:', productsError);
+      throw productsError;
     }
 
-    return mapAndAttachReviews(productsData || []);
+    console.log('[PRODUCTS] Supabase products:', productsData);
+    console.log('[PRODUCTS] Product count:', productsData?.length);
+    console.log('[PRODUCTS] Product IDs:', productsData?.map(p => p.id || p.product_id));
+
+    if (!productsData || productsData.length === 0) {
+      return [];
+    }
+
+    return mapAndAttachReviews(productsData);
   } catch (err) {
     console.error('Error fetching products from Supabase:', err);
     throw err;
@@ -573,6 +325,72 @@ export async function fetchUserProfile(userId: string): Promise<AppUser | null> 
   }
 }
 
+export async function fetchAllProfiles(): Promise<AppUser[]> {
+  if (!supabase) return [];
+  try {
+    // Check if there is a frontend admin session
+    const adminSessionRaw = localStorage.getItem('bihar_bite_admin_session');
+    let isAdmin = false;
+    if (adminSessionRaw) {
+      try {
+        const adminSession = JSON.parse(adminSessionRaw);
+        isAdmin = adminSession?.email === 'admin@biharbite.com';
+      } catch (e) {
+        console.error('Error parsing admin session:', e);
+      }
+    }
+
+    let data, error;
+
+    if (isAdmin) {
+      // Securely fetch all profiles via RPC
+      const res = await supabase.rpc('get_admin_profiles', { admin_secret: 'admin123' });
+      data = res.data;
+      error = res.error;
+    } else {
+      // Normal RLS restricted fetch (will only return the user's own profile)
+      const res = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      data = res.data;
+      error = res.error;
+    }
+
+    if (error) throw error;
+    return data as AppUser[];
+  } catch (err) {
+    console.error('Error fetching all profiles:', err);
+    return [];
+  }
+}
+
+
+
+export async function deleteGuestCustomer(email: string): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    // Anonymize the guest customer data in the orders table to "delete" them 
+    // from the Guest Customers directory without destroying historical order records.
+    const { error } = await supabase
+      .from('orders')
+      .update({
+        customer_name: 'Deleted Guest',
+        customer_email: `deleted_${Date.now()}@guest.com`,
+        customer_mobile: null,
+        shipping_address: 'Deleted'
+      })
+      .is('user_id', null)
+      .ilike('customer_email', email);
+
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Error deleting guest customer:', err);
+    return false;
+  }
+}
+
 export async function updateUserProfile(
   userId: string,
   updates: Partial<any>
@@ -662,6 +480,61 @@ export async function fetchUserOrders(userId: string): Promise<Order[]> {
   }
 }
 
+export async function fetchAllOrders(): Promise<Order[]> {
+  if (!supabase) return [];
+  try {
+    const { data: ordersData, error: ordersError } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (ordersError) throw ordersError;
+    if (!ordersData || ordersData.length === 0) return [];
+
+    const orderIds = ordersData.map(o => o.id);
+
+    // Fetch order items for these orders
+    const { data: itemsData, error: itemsError } = await supabase
+      .from('order_items')
+      .select('*')
+      .in('order_id', orderIds);
+
+    if (itemsError) throw itemsError;
+
+    const allItems = itemsData || [];
+
+    return ordersData.map((orderRow: any) => {
+      const items = allItems
+        .filter(item => item.order_id === orderRow.id)
+        .map(item => ({
+          productId: item.product_id,
+          name: item.name,
+          quantity: Number(item.quantity),
+          weight: item.weight,
+          price: Number(item.price)
+        }));
+
+      return {
+        id: orderRow.id,
+        date: orderRow.date || new Date(orderRow.created_at).toISOString().split('T')[0],
+        status: orderRow.order_status,
+        total: Number(orderRow.total),
+        customerName: orderRow.customer_name,
+        customerEmail: orderRow.customer_email,
+        customerMobile: orderRow.customer_mobile || undefined,
+        shippingAddress: orderRow.shipping_address,
+        paymentMethod: orderRow.payment_method || 'Card',
+        paymentStatus: orderRow.payment_status || 'Paid',
+        trackingStatus: orderRow.tracking_status || 'Order Placed',
+        items: items
+      } as any; // Cast as any to include extended database tracking properties dynamically
+    });
+  } catch (err) {
+    console.error('Error fetching all orders for admin:', err);
+    throw err;
+  }
+}
+
 export async function createOrderInDb(
   userId: string | null,
   customerName: string,
@@ -669,7 +542,9 @@ export async function createOrderInDb(
   customerMobile: string,
   shippingAddress: string,
   total: number,
-  items: { productId: string; name: string; quantity: number; weight: string; price: number }[]
+  items: { productId: string; name: string; quantity: number; weight: string; price: number }[],
+  paymentMethod: string = 'cod',
+  paymentStatus: string = 'Pending'
 ): Promise<Order> {
   if (!supabase) {
     throw new Error('Supabase is not configured.');
@@ -687,8 +562,8 @@ export async function createOrderInDb(
       total: total,
       order_status: 'Pending',
       tracking_status: 'Order Placed',
-      payment_method: 'Card',
-      payment_status: 'Paid',
+      payment_method: paymentMethod,
+      payment_status: paymentStatus,
       date: new Date().toISOString().split('T')[0]
     }])
     .select('*')
@@ -710,7 +585,11 @@ export async function createOrderInDb(
     .from('order_items')
     .insert(itemsRows);
 
-  if (itemsError) throw itemsError;
+  if (itemsError) {
+    // Rollback the order creation to prevent orphan orders
+    await supabase.from('orders').delete().eq('id', orderData.id);
+    throw itemsError;
+  }
 
   return {
     id: orderData.id,
@@ -788,45 +667,28 @@ export async function submitContactMessage(message: {
 }
 
 export async function submitNewsletterSubscriber(email: string) {
-  const row = {
-    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
-    email: email.trim().toLowerCase(),
-    status: 'Active',
-    created_at: new Date().toISOString()
-  };
+  const normalizedEmail = email.trim().toLowerCase();
 
   if (supabase && isSupabaseConfigured) {
     try {
-      const { data: existing, error: checkError } = await supabase
-        .from('newsletter_subscribers')
-        .select('*')
-        .eq('email', row.email)
-        .maybeSingle();
-
-      if (checkError) throw checkError;
-      if (existing) return existing;
-
       const { data, error } = await supabase
         .from('newsletter_subscribers')
-        .insert([row])
-        .select('*')
-        .single();
-      if (error) throw error;
-      const local = getLocalInquiries(LOCAL_SUBSCRIBERS_KEY);
-      if (!local.some(s => s.email === row.email)) {
-        saveLocalInquiries(LOCAL_SUBSCRIBERS_KEY, [data || row, ...local]);
+        .insert([{ email: normalizedEmail, subscribed: true }]);
+        
+      if (error) {
+        if (error.code === '23505') { // Unique violation
+          throw new Error('You\'re already subscribed to our newsletter.');
+        }
+        throw error;
       }
-      return data || row;
-    } catch (err) {
-      console.error('Supabase subscriber save failed, using local storage fallback:', err);
+      return { email: normalizedEmail, subscribed: true };
+    } catch (err: any) {
+      console.error('Supabase subscriber save failed:', err);
+      throw err;
     }
   }
 
-  const local = getLocalInquiries(LOCAL_SUBSCRIBERS_KEY);
-  if (!local.some(s => s.email === row.email)) {
-    saveLocalInquiries(LOCAL_SUBSCRIBERS_KEY, [row, ...local]);
-  }
-  return row;
+  throw new Error("Unable to subscribe right now. Please try again.");
 }
 
 export async function fetchInquiriesFromDb(table: 'contact_messages' | 'newsletter_subscribers') {
@@ -842,6 +704,13 @@ export async function fetchInquiriesFromDb(table: 'contact_messages' | 'newslett
         .order('created_at', { ascending: false });
       if (error) throw error;
       if (data) {
+        if (table === 'newsletter_subscribers') {
+          data.forEach(item => {
+            if (item.status === undefined) {
+              item.status = item.subscribed ? 'Active' : 'Unsubscribed';
+            }
+          });
+        }
         saveLocalInquiries(localKey, data);
         return data;
       }
@@ -874,7 +743,14 @@ export async function updateInquiryStatusInDb(
   if (table === 'contact_messages') localKey = LOCAL_CONTACTS_KEY;
   else if (table === 'newsletter_subscribers') localKey = LOCAL_SUBSCRIBERS_KEY;
 
-  const updatePayload: any = { status: newStatus };
+  const updatePayload: any = {};
+  
+  if (table === 'newsletter_subscribers') {
+    updatePayload.subscribed = newStatus === 'Active';
+  } else {
+    updatePayload.status = newStatus;
+  }
+
   if (adminNotes !== undefined) {
     updatePayload.admin_notes = adminNotes;
   }
@@ -904,4 +780,90 @@ export async function updateInquiryStatusInDb(
   const updated = local.map(item => item.id === id ? { ...item, ...updatePayload } : item);
   saveLocalInquiries(localKey, updated);
   return updated.find(item => item.id === id);
+}
+
+// ====================================================================
+// WISHLIST MANAGEMENT
+// ====================================================================
+
+export async function fetchUserWishlist(userId: string): Promise<string[]> {
+  if (!supabase) return [];
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return [];
+
+    const { data, error } = await supabase
+      .from('wishlist_items')
+      .select('product_id')
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+    
+    return data ? data.map(item => item.product_id) : [];
+  } catch (err) {
+    console.error('Error fetching user wishlist:', err);
+    return [];
+  }
+}
+
+export async function addToUserWishlist(userId: string, productId: string): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Not authenticated with Supabase. Cannot modify wishlist.');
+    }
+
+    const { error } = await supabase
+      .from('wishlist_items')
+      .insert([{ user_id: user.id, product_id: productId }]);
+
+    if (error) {
+      if (error.code === '23505') { // Unique violation
+        return true; // Already exists
+      }
+      throw error;
+    }
+    return true;
+  } catch (err) {
+    console.error('Error adding to wishlist:', err);
+    throw err;
+  }
+}
+
+export async function removeFromUserWishlist(userId: string, productId: string): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Not authenticated with Supabase. Cannot modify wishlist.');
+    }
+
+    const { error } = await supabase
+      .from('wishlist_items')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('product_id', productId);
+
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Error removing from wishlist:', err);
+    throw err;
+  }
+}
+
+export async function updateOrderStatusInDb(orderId: string, status: string): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update({ order_status: status })
+      .eq('id', orderId);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Error updating order status:', err);
+    return false;
+  }
 }

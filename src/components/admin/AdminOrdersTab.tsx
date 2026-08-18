@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Order } from '../../types';
-import { Phone } from 'lucide-react';
+import { Phone, Loader2 } from 'lucide-react';
+import { fetchAllOrders, updateOrderStatusInDb } from '../../lib/supabase';
 
 interface AdminOrdersTabProps {
   orders: Order[];
@@ -8,11 +9,50 @@ interface AdminOrdersTabProps {
   showToast: (msg: string, type?: 'success' | 'error') => void;
 }
 
-export default function AdminOrdersTab({ orders, onUpdateOrderStatus, showToast }: AdminOrdersTabProps) {
+export default function AdminOrdersTab({ orders: initialOrders, onUpdateOrderStatus, showToast }: AdminOrdersTabProps) {
   const [orderFilter, setOrderFilter] = useState<'All' | Order['status']>('All');
   const [orderSearch, setOrderSearch] = useState('');
+  const [liveOrders, setLiveOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const filteredOrders = orders.filter(o => {
+  useEffect(() => {
+    let mounted = true;
+    const loadOrders = async () => {
+      try {
+        const data = await fetchAllOrders();
+        if (mounted) {
+          setLiveOrders(data);
+        }
+      } catch (err: any) {
+        console.error('Failed to load live orders:', err);
+        if (mounted) {
+          setErrorMsg(err.message || 'Database query failed.');
+          showToast('Failed to load latest orders', 'error');
+        }
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+    loadOrders();
+    return () => { mounted = false; };
+  }, [showToast]);
+
+  const handleUpdateLocalStatus = async (orderId: string, newStatus: string) => {
+    // Optimistic update
+    setLiveOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus as any } : o));
+    onUpdateOrderStatus(orderId, newStatus as any); // Sync with global state if needed
+    
+    // Update DB
+    const success = await updateOrderStatusInDb(orderId, newStatus);
+    if (success) {
+      showToast(`Order #${orderId} status modified!`, 'success');
+    } else {
+      showToast('Failed to save status change to database.', 'error');
+    }
+  };
+
+  const filteredOrders = liveOrders.filter(o => {
     const matchesStatus = orderFilter === 'All' || o.status === orderFilter;
     const q = orderSearch.toLowerCase().trim();
     const matchesSearch = !q || o.customerName.toLowerCase().includes(q) || o.customerEmail.toLowerCase().includes(q) || o.id.toLowerCase().includes(q);
@@ -45,8 +85,23 @@ export default function AdminOrdersTab({ orders, onUpdateOrderStatus, showToast 
       </div>
 
       <div className="space-y-4">
-        {filteredOrders.map(order => (
-          <div key={order.id} className="bg-white border border-outline-variant/30 rounded-3xl p-5 hover:border-primary/30 transition-all space-y-4 shadow-sm">
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="text-center py-12 text-on-surface-variant/70 text-sm">
+            {errorMsg ? (
+              <span className="text-red-500 font-bold">{errorMsg}</span>
+            ) : orderSearch ? (
+              "No orders found matching your search."
+            ) : (
+              "No orders found."
+            )}
+          </div>
+        ) : (
+          filteredOrders.map(order => (
+            <div key={order.id} className="bg-white border border-outline-variant/30 rounded-3xl p-5 hover:border-primary/30 transition-all space-y-4 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/10 pb-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5">
@@ -61,7 +116,7 @@ export default function AdminOrdersTab({ orders, onUpdateOrderStatus, showToast 
                 <span className="font-mono text-sm font-bold text-primary mr-1">₹{order.total}</span>
                 <select
                   value={order.status}
-                  onChange={(e) => { onUpdateOrderStatus(order.id, e.target.value as any); showToast(`Order #${order.id} status modified!`, 'success'); }}
+                  onChange={(e) => handleUpdateLocalStatus(order.id, e.target.value)}
                   className={`text-[10px] font-bold uppercase tracking-wider border-0 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-primary/20 cursor-pointer ${
                     order.status === 'Completed' || order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
                     order.status === 'Cancelled' || order.status === 'Returned' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-900'
@@ -101,10 +156,7 @@ export default function AdminOrdersTab({ orders, onUpdateOrderStatus, showToast 
               </div>
             </div>
           </div>
-        ))}
-        {filteredOrders.length === 0 && (
-          <div className="text-center py-12 text-on-surface-variant/70 bg-white border border-dashed border-[#E5DFD1] rounded-3xl">No customer orders match this query.</div>
-        )}
+        )))}
       </div>
     </div>
   );

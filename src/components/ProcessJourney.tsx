@@ -7,29 +7,29 @@ const processSteps = [
     title: "Harvesting from Bihar Wetlands", 
     step: "Step 1", 
     video: "/videos/process-of-makhana.mp4", 
-    duration: "0:42", 
+    duration: "0:20", 
     desc: "Collected traditionally from lotus ponds by skilled farmers." 
   },
   { 
     title: "Cleaning & Processing", 
     step: "Step 2", 
     video: "/videos/cleaning-and-processing.mp4", 
-    duration: "1:15", 
+    duration: "0:10", 
     desc: "Naturally cleaned and prepared using traditional methods." 
   },
   { 
-    title: "Roasting & Popping", 
+    title: "Grading Manually", 
     step: "Step 3", 
     video: "/videos/03.mp4", 
-    duration: "0:58", 
-    desc: "Expertly roasted over fire for the perfect crunch." 
+    duration: "0:15", 
+    desc: "Expertly graded manually for the perfect crunch." 
   },
   { 
-    title: "Packaging & Delivery", 
+    title: "Final Packaging & Quality Check", 
     step: "Step 4", 
     video: "/videos/packing.mp4", 
-    duration: "2:04", 
-    desc: "Freshly packed and shipped while preserving quality."
+    duration: "0:18", 
+    desc: "Packed hygienically and delivered to your doorstep."
   }
 ];
 
@@ -183,9 +183,14 @@ export default function ProcessJourney() {
           </p>
           <div className="w-[120px] h-[1px] bg-[#C28E63]/30 mb-10" />
           
-          <button className="group flex items-center gap-3 bg-[#7C8464] text-[#FAF8F4] px-8 py-3.5 rounded-full font-sans font-bold uppercase tracking-widest text-[11px] transition-all duration-300 hover:bg-[#55613A] hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]">
+          <a 
+            href="https://www.instagram.com/bihar_biteofficial/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-3 bg-[#7C8464] text-[#FAF8F4] px-8 py-3.5 rounded-full font-sans font-bold uppercase tracking-widest text-[11px] transition-all duration-300 hover:bg-[#55613A] hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]"
+          >
             Explore Our Process <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </a>
         </motion.div>
       </div>
 

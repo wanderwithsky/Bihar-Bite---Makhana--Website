@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Product, User, Order } from '../../types';
 import { ShoppingBag, IndianRupee, Users, Layers, AlertTriangle, Star, Receipt } from 'lucide-react';
-import { AdminSection } from './AdminLayout';
+import type { AdminSection } from './AdminLayout';
 
 interface AdminOverviewTabProps {
   products: Product[];

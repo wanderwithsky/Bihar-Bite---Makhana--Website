@@ -24,10 +24,11 @@ import AdminLoginScreen from './components/AdminLoginScreen';
 import AdminLayout from './components/admin/AdminLayout';
 import FAQScreen from './components/FAQScreen';
 import ScrollToTop from './components/ScrollToTop';
+import FloatingWhatsAppButton from './components/FloatingWhatsAppButton';
 import TrackOrderScreen from './components/TrackOrderScreen';
 import AccountScreen from './components/AccountScreen';
 import OrdersScreen from './components/OrdersScreen';
-import { Product, CartItem, ScreenType, User, Order } from './types';
+import { Product, CartItem, ScreenType, User, Order, Address } from './types';
 import { 
   isSupabaseConfigured, 
   supabase, 
@@ -37,9 +38,14 @@ import {
   submitNewsletterSubscriber,
   addProductToDb,
   updateProductInDb,
-  deleteProductFromDb
+  deleteProductFromDb,
+  fetchUserWishlist,
+  addToUserWishlist,
+  removeFromUserWishlist,
+  fetchProducts,
+  fetchAllOrders,
+  fetchAllProfiles
 } from './lib/supabase';
-import { productsData } from './products';
 
 export default function App() {
   const navigate = useNavigate();
@@ -82,8 +88,10 @@ export default function App() {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // --- DYNAMIC DATABASE STATES ---
-  // Using local products.ts
-  const catalogProducts = productsData;
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
+  const [isProductsLoading, setIsProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
+  
   const [users, setUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   
@@ -91,105 +99,51 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentAdmin, setCurrentAdmin] = useState<{ email: string; name: string } | null>(null);
 
-  // Default seed values for demonstration
-  const defaultUsers: User[] = [
-    {
-      id: 'usr-1',
-      fullName: 'Aarav Sharma',
-      email: 'aarav@sharma.com',
-      mobile: '9876543210',
-      status: 'Active',
-      dateRegistered: '2026-06-15',
-      orderHistory: []
-    },
-    {
-      id: 'usr-2',
-      fullName: 'Priya Patel',
-      email: 'priya@patel.com',
-      mobile: '8765432109',
-      status: 'Active',
-      dateRegistered: '2026-07-02',
-      orderHistory: []
-    },
-    {
-      id: 'usr-3',
-      fullName: 'Deepak Mishra',
-      email: 'deepak@mishra.com',
-      mobile: '7654321098',
-      status: 'Suspended',
-      dateRegistered: '2026-05-10',
-      orderHistory: []
-    }
-  ];
-
-  const defaultOrders: Order[] = [
-    {
-      id: 'ORD-8924',
-      date: '2026-07-10',
-      status: 'Completed',
-      total: 1047,
-      customerName: 'Aarav Sharma',
-      customerEmail: 'aarav@sharma.com',
-      customerMobile: '9876543210',
-      shippingAddress: 'Flat 402, Ganga Heights, Boring Road, Patna - 800001',
-      items: [
-        { productId: 'himalayan-pink-salt', name: 'Himalayan Pink Salt Roasted', quantity: 2, weight: '250g', price: 349 },
-        { productId: 'aged-cheddar-herb', name: 'Aged Cheddar & Herb', quantity: 1, weight: '250g', price: 389 }
-      ]
-    },
-    {
-      id: 'ORD-9431',
-      date: '2026-07-15',
-      status: 'Pending',
-      total: 389,
-      customerName: 'Priya Patel',
-      customerEmail: 'priya@patel.com',
-      customerMobile: '8765432109',
-      shippingAddress: 'Sector 4, Bokaro Steel City, Bokaro - 827004',
-      items: [
-        { productId: 'aged-cheddar-herb', name: 'Aged Cheddar & Herb', quantity: 1, weight: '250g', price: 389 }
-      ]
-    },
-    {
-      id: 'ORD-4819',
-      date: '2026-07-16',
-      status: 'Cancelled',
-      total: 349,
-      customerName: 'Deepak Mishra',
-      customerEmail: 'deepak@mishra.com',
-      customerMobile: '7654321098',
-      shippingAddress: 'Mithila Sadan, Darbhanga Road, Muzaffarpur - 842001',
-      items: [
-        { productId: 'himalayan-pink-salt', name: 'Himalayan Pink Salt Roasted', quantity: 1, weight: '250g', price: 349 }
-      ]
-    }
-  ];
-
-  // Map respective histories on load
-  defaultUsers[0].orderHistory = [defaultOrders[0]];
-  defaultUsers[2].orderHistory = [defaultOrders[2]];
+  // Removed default seed data as per requirements
 
   // Load database structures on startup
   useEffect(() => {
     const loadStartupData = async () => {
-      // (Products are now loaded synchronously from productsData)
-      
-      // 2. Fetch User Sessions fallback
-      const savedUsers = localStorage.getItem('bihar_bite_users');
-      if (savedUsers) {
-        setUsers(JSON.parse(savedUsers));
+      // 1. Fetch live products from Supabase
+      if (isSupabaseConfigured && supabase) {
+        setIsProductsLoading(true);
+        setProductsError(null);
+        try {
+          const fetchedProducts = await fetchProducts();
+          setCatalogProducts(fetchedProducts || []);
+        } catch (err: any) {
+          console.error('Failed to load products from Supabase:', err);
+          setProductsError('Unable to load products. Please try again.');
+        } finally {
+          setIsProductsLoading(false);
+        }
       } else {
-        setUsers(defaultUsers);
-        localStorage.setItem('bihar_bite_users', JSON.stringify(defaultUsers));
+        setIsProductsLoading(false);
+        setProductsError('Database connection not configured.');
       }
-
-      // 3. Orders fallback
-      const savedOrders = localStorage.getItem('bihar_bite_orders');
-      if (savedOrders) {
-        setOrders(JSON.parse(savedOrders));
+      
+      // 2. Fetch User Sessions (Profiles) from Supabase
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const fetchedProfiles = await fetchAllProfiles();
+          setUsers(fetchedProfiles as any); // cast for compat
+        } catch (err) {
+          console.error('Failed to load global profiles from Supabase:', err);
+        }
+      }
+      // 3. Orders from Supabase
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const liveOrders = await fetchAllOrders();
+          setOrders(liveOrders);
+        } catch (err) {
+          console.error('Failed to load global orders from Supabase:', err);
+        }
       } else {
-        setOrders(defaultOrders);
-        localStorage.setItem('bihar_bite_orders', JSON.stringify(defaultOrders));
+        const savedOrders = localStorage.getItem('bihar_bite_orders');
+        if (savedOrders) {
+          setOrders(JSON.parse(savedOrders));
+        }
       }
 
       // 4. Restore Sessions (check Supabase session first, then fallback to local)
@@ -249,31 +203,48 @@ export default function App() {
     }
   }, [isAuthModalOpen]);
 
-  // Initialize cart & wishlist from localStorage if available
+  // Initialize cart from localStorage if available
   useEffect(() => {
     const savedCart = localStorage.getItem('bihar_bite_cart');
-    const savedWishlist = localStorage.getItem('bihar_bite_wishlist');
     if (savedCart) {
       try { setCart(JSON.parse(savedCart)); } catch (e) {}
     }
-    if (savedWishlist) {
-      try {
-        const parsed = JSON.parse(savedWishlist);
-        if (Array.isArray(parsed)) {
-          // If the array contains IDs (strings), map them to products
-          if (parsed.length > 0 && typeof parsed[0] === 'string') {
-            const mappedProducts = parsed
-              .map(id => catalogProducts.find(p => p.id === id))
-              .filter(Boolean) as Product[];
-            setWishlist(mappedProducts);
-          } else {
-            // Legacy support: it already contained objects
-            setWishlist(parsed);
-          }
+  }, []);
+
+  // Sync wishlist from Supabase for authenticated users, or localStorage for guests
+  useEffect(() => {
+    const syncWishlist = async () => {
+      if (currentUser) {
+        // Authenticated user: fetch from DB
+        const productIds = await fetchUserWishlist(currentUser.id);
+        const mappedProducts = productIds
+          .map(id => catalogProducts.find(p => p.id === id))
+          .filter(Boolean) as Product[];
+        setWishlist(mappedProducts);
+      } else {
+        // Guest user: load from localStorage
+        const savedWishlist = localStorage.getItem('bihar_bite_wishlist');
+        if (savedWishlist) {
+          try {
+            const parsed = JSON.parse(savedWishlist);
+            if (Array.isArray(parsed)) {
+              if (parsed.length > 0 && typeof parsed[0] === 'string') {
+                const mappedProducts = parsed
+                  .map(id => catalogProducts.find(p => p.id === id))
+                  .filter(Boolean) as Product[];
+                setWishlist(mappedProducts);
+              } else {
+                setWishlist(parsed);
+              }
+            }
+          } catch (e) {}
+        } else {
+          setWishlist([]); // Clear if no guest wishlist
         }
-      } catch (e) {}
-    }
-  }, [catalogProducts]);
+      }
+    };
+    syncWishlist();
+  }, [currentUser, catalogProducts]);
 
   // Save changes to localStorage
   useEffect(() => {
@@ -282,9 +253,12 @@ export default function App() {
 
   useEffect(() => {
     // Store ONLY product IDs to prevent localStorage bloat and stale data
-    const wishlistIds = wishlist.map(p => p.id);
-    safeLocalStorageSet('bihar_bite_wishlist', JSON.stringify(wishlistIds));
-  }, [wishlist]);
+    // ONLY save to localStorage for guests. Authenticated users save to DB directly.
+    if (!currentUser) {
+      const wishlistIds = wishlist.map(p => p.id);
+      safeLocalStorageSet('bihar_bite_wishlist', JSON.stringify(wishlistIds));
+    }
+  }, [wishlist, currentUser]);
 
   // DB Sync helper utilities
   const safeLocalStorageSet = (key: string, value: string) => {
@@ -366,23 +340,46 @@ export default function App() {
   };
 
   // Wishlist operations
-  const handleToggleWishlist = (product: Product) => {
-    setWishlist((prev) => {
-      const isSaved = prev.some((item) => item.id === product.id);
-      if (isSaved) {
-        return prev.filter((item) => item.id !== product.id);
-      } else {
-        return [...prev, product];
-      }
-    });
+  const handleToggleWishlist = async (product: Product) => {
+    const isSaved = wishlist.some((item) => item.id === product.id);
     
-    // Provide optimistic UI feedback using the stale closure state 
-    // (the actual state update above uses reliable prev state)
-    const isSavedStale = wishlist.some((item) => item.id === product.id);
-    if (isSavedStale) {
-      showToast('Removed flavor from wishlist.', 'success');
+    if (currentUser) {
+      // Authenticated mutation
+      try {
+        if (isSaved) {
+          await removeFromUserWishlist(currentUser.id, product.id);
+          setWishlist(prev => prev.filter(item => item.id !== product.id));
+          showToast('Removed flavor from wishlist.', 'success');
+        } else {
+          await addToUserWishlist(currentUser.id, product.id);
+          setWishlist(prev => [...prev, product]);
+          showToast('Saved flavor to your wishlist!', 'success');
+        }
+      } catch (err: any) {
+        console.error('Wishlist update failed:', {
+          code: err.code,
+          message: err.message,
+          details: err.details,
+          hint: err.hint,
+          err: err
+        });
+        showToast('Failed to update wishlist. Please try again.', 'error');
+      }
     } else {
-      showToast('Saved flavor to your wishlist!', 'success');
+      // Guest mutation
+      setWishlist((prev) => {
+        if (isSaved) {
+          return prev.filter((item) => item.id !== product.id);
+        } else {
+          return [...prev, product];
+        }
+      });
+      
+      if (isSaved) {
+        showToast('Removed flavor from wishlist.', 'success');
+      } else {
+        showToast('Saved flavor to your wishlist!', 'success');
+      }
     }
   };
 
@@ -464,25 +461,27 @@ export default function App() {
       paymentMethod: details.paymentMethod || 'cod',
       paymentStatus: details.paymentMethod === 'online' ? 'Paid' : 'Pending',
       deliveryStartDate,
-      deliveryEndDate
+      deliveryEndDate,
+      customerId: currentUser ? currentUser.id : null
     };
 
-    if (isSupabaseConfigured && currentUser) {
+    if (isSupabaseConfigured) {
       try {
-        // Fallback or attempt to augment newDbOrder with our local calculation 
-        // since Supabase schema might not immediately support all new fields.
         let newDbOrder: Order = await createOrderInDb(
-          currentUser.id,
+          currentUser ? currentUser.id : null,
           details.name,
           details.email,
           details.phone,
           details.address,
           finalTotal,
-          sourceItems
+          sourceItems,
+          details.paymentMethod || 'cod',
+          details.paymentMethod === 'online' ? 'Paid' : 'Pending'
         );
         newDbOrder = { ...newOrder, ...newDbOrder }; // merge to keep local fields
 
-        if (updatedProfile) {
+        // Update current user state if they are registered
+        if (currentUser && updatedProfile) {
           updatedProfile = {
             ...updatedProfile,
             orderHistory: [newDbOrder, ...(updatedProfile.orderHistory || [])]
@@ -497,14 +496,16 @@ export default function App() {
         setOrders(prev => [newDbOrder, ...prev]);
         if (buyNowItem) setBuyNowItem(null);
         else setCart([]);
-        showToast('Secure Order placed successfully! Check your profile history.', 'success');
+        showToast('Secure Order placed successfully!', 'success');
         return newDbOrder;
       } catch (err: any) {
-        console.error('Supabase order creation failed, trying local fallback:', err);
-        showToast(`Supabase order failed: ${err.message}. Saving locally...`, 'error');
+        console.error('Supabase order creation failed:', err);
+        showToast(`Checkout failed: ${err.message}`, 'error');
+        throw new Error(err.message); // Stop checkout process and propagate to caller
       }
     }
 
+    // Completely offline fallback (only triggers if isSupabaseConfigured is somehow false)
     const updatedOrders = [newOrder, ...orders];
     persistOrders(updatedOrders);
 
@@ -845,6 +846,9 @@ Message: ${details.message}`;
                 setSelectedCategory={setSelectedCategory}
                 setSelectedProduct={setSelectedProduct}
                 products={catalogProducts}
+                isProductsLoading={isProductsLoading}
+                productsError={productsError}
+                onSubmitContact={handleContactSubmit}
               />
             } />
 
@@ -855,6 +859,8 @@ Message: ${details.message}`;
                 setSelectedCategory={setSelectedCategory}
                 setSelectedProduct={setSelectedProduct}
                 products={catalogProducts}
+                isProductsLoading={isProductsLoading}
+                productsError={productsError}
                 wishlist={wishlist}
                 onToggleWishlist={handleToggleWishlist}
                 onAddToCart={handleAddToCart}
@@ -1010,6 +1016,9 @@ Message: ${details.message}`;
       {!isAdminScreen && (
         <Footer setScreen={setScreen} onSubscribe={handleSubscribe} />
       )}
+
+      {/* WhatsApp Floating Button (storefront only) */}
+      {!isAdminScreen && <FloatingWhatsAppButton />}
     </div>
   );
 }

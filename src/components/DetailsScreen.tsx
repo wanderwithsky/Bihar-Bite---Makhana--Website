@@ -25,7 +25,7 @@ export default function DetailsScreen({
   setScreen,
   product: oldProductProp,
   setSelectedProduct,
-  products, // This prop might be old, we will use productsData if it's missing, but App.tsx passes it.
+  products,
   wishlist,
   onToggleWishlist,
   onAddToCart,
@@ -61,7 +61,7 @@ export default function DetailsScreen({
   // Gallery images from the new products.ts format
   const galleryImages = [
     ...((product as any).video ? [(product as any).video] : []),
-    ...(product.images || [])
+    ...((product.images && product.images.length > 0) ? product.images : (product.image ? [product.image] : ['/images/hero/03.png']))
   ];
 
   const [activeImage, setActiveImage] = useState<string>(galleryImages[0]);
@@ -202,7 +202,7 @@ export default function DetailsScreen({
                 </div>
               )}
               <AnimatePresence mode="wait">
-                {activeImage.endsWith('.mp4') || activeImage.endsWith('.webm') || activeImage.endsWith('.mov') ? (
+                {activeImage?.endsWith('.mp4') || activeImage?.endsWith('.webm') || activeImage?.endsWith('.mov') ? (
                   <motion.video
                     key={activeImage}
                     initial={{ opacity: 0 }}
@@ -244,7 +244,7 @@ export default function DetailsScreen({
                       : 'opacity-70 hover:opacity-100'
                   }`}
                 >
-                  {img.endsWith('.mp4') || img.endsWith('.webm') || img.endsWith('.mov') ? (
+                  {img?.endsWith('.mp4') || img?.endsWith('.webm') || img?.endsWith('.mov') ? (
                     <video src={img} className="w-full h-full object-cover" muted playsInline />
                   ) : (
                     <img src={img} className="w-full h-full object-cover" alt="thumbnail" />
@@ -275,7 +275,7 @@ export default function DetailsScreen({
             </p>
 
             {/* Price block */}
-            <div className="flex items-end gap-3 mb-2">
+            <div className="flex items-end gap-3 mb-1">
               <span className="text-3xl font-bold text-[#143A2A]">
                 {(product as any).priceDisplay ? (product as any).priceDisplay.replace(/\d+/, (match: string) => String(Number(match) * quantity)) : `₹${activePrice * quantity}`}
               </span>
@@ -286,6 +286,11 @@ export default function DetailsScreen({
                 </span>
               ) : null}
             </div>
+            
+            <p className="text-[13px] text-stone-500 mb-6">
+              Inclusive of all taxes and transportation
+            </p>
+
             {(product as any).taxLabel && (
               <div className="mb-6">
                 <span className="text-xs font-semibold text-stone-500 bg-stone-100 px-3 py-1 rounded-full border border-stone-200">

@@ -1,4 +1,5 @@
-import { ArrowRight, Star, Award, ShieldCheck, Truck, RotateCcw, CheckSquare, HeartHandshake, Leaf, Globe, CheckCircle2, ChevronRight } from 'lucide-react';
+import { ArrowRight, Star, Award, ShieldCheck, Truck, RotateCcw, CheckSquare, HeartHandshake, Leaf, Globe, CheckCircle2, ChevronRight, MapPin } from 'lucide-react';
+import ContactForm from './ContactForm';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useRef, useEffect } from 'react';
@@ -6,13 +7,22 @@ import { Product, ScreenType } from '../types';
 import ProcessJourney from './ProcessJourney';
 import GallerySection from './GallerySection';
 import GlobalBackground from './GlobalBackground';
-import { productsData } from '../products';
 
 interface HomeScreenProps {
   setScreen: (screen: ScreenType) => void;
   setSelectedCategory: (category: Product['category'] | 'All') => void;
   setSelectedProduct: (product: Product | null) => void;
   products: Product[];
+  isProductsLoading?: boolean;
+  productsError?: string | null;
+  onSubmitContact: (details: {
+    name: string;
+    email: string;
+    phone?: string;
+    inquiryType?: string;
+    message: string;
+    subscribeNewsletter?: boolean;
+  }) => Promise<void> | void;
 }
 
 function SocialReelCard({ reel, idx, onClick }: { reel: any; idx: number; onClick: () => void }) {
@@ -109,11 +119,14 @@ function FeaturedProductVideo({ src }: { src: string }) {
   );
 }
 
-export default function HomeScreen({
-  setScreen,
-  setSelectedCategory,
-  setSelectedProduct,
+export default function HomeScreen({ 
+  setScreen, 
+  setSelectedCategory, 
+  setSelectedProduct, 
   products,
+  isProductsLoading,
+  productsError,
+  onSubmitContact
 }: HomeScreenProps) {
   const navigate = useNavigate();
   const [activeReel, setActiveReel] = useState<{video: string} | null>(null);
@@ -470,18 +483,42 @@ export default function HomeScreen({
 
           {/* Product Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[32px]">
-            {productsData.filter(p => p.isBestseller).slice(0, 4).map((prod, idx) => {
-              const coverImage = prod.images?.[0] || '/images/04.png';
+            {isProductsLoading ? (
+              // Loading Skeletons
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="group relative bg-[#FDFDF9] rounded-[36px] border border-[#EBE6DA] shadow-sm overflow-hidden flex flex-col h-full animate-pulse">
+                  <div className="relative w-full h-[400px] lg:h-[500px] p-[20px] flex items-center justify-center bg-stone-100">
+                    <div className="w-48 h-48 bg-stone-200 rounded-full"></div>
+                  </div>
+                  <div className="flex flex-col grow justify-end bg-white/60">
+                    <div className="px-8 pt-4 pb-6">
+                      <div className="h-6 bg-stone-200 rounded w-3/4 mx-auto mb-2"></div>
+                    </div>
+                    <div className="px-8 py-5 flex justify-between items-center border-t border-[#EBE6DA]/80">
+                      <div className="h-6 bg-stone-200 rounded w-16"></div>
+                      <div className="h-4 bg-stone-200 rounded w-12"></div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : products.filter((p: any) => p.isBestseller || p.is_bestseller).length === 0 ? (
+              // Empty State
+              <div className="col-span-full text-center py-20 text-[#143A2A]">
+                No featured products found.
+              </div>
+            ) : (
+              products.filter((p: any) => p.isBestseller || p.is_bestseller).slice(0, 4).map((prod, idx) => {
+                const coverImage = (prod as any).images?.[0] || prod.image || '/images/04.png';
               
               return (
               <motion.div
-                key={prod.slug}
+                key={prod.id}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: (idx + 1) * 0.1 }}
                 className="group relative bg-[#FDFDF9] rounded-[36px] border border-[#EBE6DA] shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-[10px] transition-all duration-300 overflow-hidden flex flex-col cursor-pointer h-full"
-                onClick={() => navigate(`/product/${prod.slug}`)}
+                onClick={() => navigate(`/product/${prod.id}`)}
               >
                 {/* Image Area */}
                 <div className="relative w-full h-[400px] lg:h-[500px] p-[20px] flex items-center justify-center bg-transparent overflow-hidden">
@@ -520,7 +557,7 @@ export default function HomeScreen({
                       <div className="absolute left-0 flex items-center opacity-0 translate-y-2 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0">
                         <button 
                           className="bg-[#143A2A] text-[#FDFCF8] text-[11px] font-bold tracking-[0.15em] px-5 py-2.5 rounded-full uppercase shadow-md hover:bg-[#0E281C] transition-colors"
-                          onClick={(e) => { e.stopPropagation(); navigate(`/product/${prod.slug}`); }}
+                          onClick={(e) => { e.stopPropagation(); navigate(`/product/${prod.id}`); }}
                         >
                           VIEW DETAILS
                         </button>
@@ -535,7 +572,9 @@ export default function HomeScreen({
                   </div>
                 </div>
               </motion.div>
-            )})}
+              );
+            })
+            )}
           </div>
 
           {/* View All Button */}
@@ -841,38 +880,33 @@ export default function HomeScreen({
       {/* ─── OUR GALLERY SECTION ─── */}
       <GallerySection />
 
-      {/* Elegant CTA */}
-      <section className="py-32 bg-transparent relative">
-         <div className="max-w-4xl mx-auto px-6 text-center">
-            <motion.div
-               initial={{ opacity: 0, scale: 0.95 }}
-               whileInView={{ opacity: 1, scale: 1 }}
-               viewport={{ once: true }}
-               transition={{ duration: 0.8 }}
-               className="bg-white rounded-[40px] p-12 md:p-20 shadow-xl border border-stone-100"
-            >
-               <h2 className="font-serif text-4xl md:text-5xl text-[#3A3832] font-light mb-6">
-                 Experience the <span className="italic text-[#7C8464]">Finest</span>
-               </h2>
-               <p className="text-stone-500 font-light mb-10 max-w-lg mx-auto">
-                 Join thousands of healthy snackers and culinary experts worldwide who trust Bihar Bite for their premium Makhana needs.
-               </p>
-               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button 
-                    onClick={() => navigate('/product/:id')}
-                    className="bg-[#3A3832] text-white px-8 py-4 rounded-full text-xs font-bold uppercase tracking-[0.15em] hover:bg-[#1A1A1A] transition-colors"
-                  >
-                    Shop Retail
-                  </button>
-                  <button 
-                    onClick={() => setScreen('bulk')}
-                    className="bg-[#7C8464] text-white px-8 py-4 rounded-full text-xs font-bold uppercase tracking-[0.15em] hover:bg-[#6A7155] transition-colors"
-                  >
-                    Inquire for Bulk Export
-                  </button>
-               </div>
-            </motion.div>
-         </div>
+      {/* ─── OUR HERITAGE HUB LOCATION SECTION ─── */}
+      <section className="py-20 md:py-32 bg-transparent relative">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <span className="text-secondary font-serif italic text-lg block">Our Heritage Hub</span>
+            <h2 className="font-serif text-3xl md:text-4xl text-primary mt-2">Visit Our Heritage Hub</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start bg-[#FDFBF7] rounded-[32px] p-8 md:p-10 border border-outline-variant/30 shadow-sm max-w-6xl mx-auto">
+            <div className="h-full min-h-[450px]">
+              <ContactForm onSubmitContact={onSubmitContact} />
+            </div>
+            <div className="w-full h-full min-h-[450px] rounded-[24px] overflow-hidden border border-outline-variant/20 shadow-sm relative bg-surface-container-low">
+              <iframe
+                title="Google Maps Location"
+                src="https://maps.google.com/maps?q=Village-+Sripur,+Bahadurpur+Post+Malhipatti,+District+Darbhanga,+Bihar+-+846002&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={false}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="absolute inset-0 w-full h-full"
+              ></iframe>
+            </div>
+          </div>
+        </div>
       </section>
       
     </div>

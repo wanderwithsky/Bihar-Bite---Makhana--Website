@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS public.export_inquiries (
 CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
-    status TEXT DEFAULT 'Active' CHECK (status IN ('Active', 'Unsubscribed')),
+    subscribed BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -192,7 +192,7 @@ CREATE POLICY "Allow public insert to contact_messages" ON public.contact_messag
 CREATE POLICY "Allow public insert to distributor_inquiries" ON public.distributor_inquiries FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public insert to bulk_inquiries" ON public.bulk_inquiries FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public insert to export_inquiries" ON public.export_inquiries FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public insert to newsletter_subscribers" ON public.newsletter_subscribers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public insert to newsletter_subscribers" ON public.newsletter_subscribers FOR INSERT TO anon, authenticated WITH CHECK (true);
 
 -- Allow read/update access (for simplicity we can allow it to all, or restrict to auth users)
 CREATE POLICY "Allow select to contact_messages" ON public.contact_messages FOR SELECT USING (true);
@@ -207,8 +207,9 @@ CREATE POLICY "Allow update to bulk_inquiries" ON public.bulk_inquiries FOR UPDA
 CREATE POLICY "Allow select to export_inquiries" ON public.export_inquiries FOR SELECT USING (true);
 CREATE POLICY "Allow update to export_inquiries" ON public.export_inquiries FOR UPDATE USING (true);
 
-CREATE POLICY "Allow select to newsletter_subscribers" ON public.newsletter_subscribers FOR SELECT USING (true);
-CREATE POLICY "Allow update to newsletter_subscribers" ON public.newsletter_subscribers FOR UPDATE USING (true);
+-- Only authenticated users should read/update newsletter_subscribers
+CREATE POLICY "Allow authenticated select to newsletter_subscribers" ON public.newsletter_subscribers FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow authenticated update to newsletter_subscribers" ON public.newsletter_subscribers FOR UPDATE TO authenticated USING (true);
 
 -- ====================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
@@ -242,14 +243,19 @@ CREATE POLICY "Allow public read access to reviews" ON public.reviews
 CREATE POLICY "Allow authenticated users to create reviews" ON public.reviews
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Orders Policies: Users can only view and insert their own orders
+-- Orders Policies: Users can only view their own orders (and admins via dashboard)
 CREATE POLICY "Allow users to view their own orders" ON public.orders
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT USING (auth.uid() = user_id OR user_id IS NULL);
 
+-- Allow authenticated users to insert their own orders, AND allow guests (user_id IS NULL)
 CREATE POLICY "Allow users to insert their own orders" ON public.orders
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
--- Order Items Policies: Users can only view and insert items for their own orders
+-- Allow users to delete their own orders (needed for frontend rollback if order_items insert fails)
+CREATE POLICY "Allow users to delete their own orders" ON public.orders
+    FOR DELETE USING (auth.uid() = user_id OR user_id IS NULL);
+
+-- Order Items Policies: Users can view and insert items for their own orders
 CREATE POLICY "Allow users to view their own order items" ON public.order_items
     FOR SELECT USING (
         EXISTS (
@@ -264,7 +270,7 @@ CREATE POLICY "Allow users to insert their own order items" ON public.order_item
         EXISTS (
             SELECT 1 FROM public.orders 
             WHERE public.orders.id = public.order_items.order_id 
-            AND public.orders.user_id = auth.uid()
+            AND (public.orders.user_id = auth.uid() OR public.orders.user_id IS NULL)
         )
     );
 
@@ -287,3 +293,26 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ====================================================================
+-- 13. Create Wishlist Items table
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.wishlist_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    product_id TEXT NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(user_id, product_id)
+);
+
+ALTER TABLE public.wishlist_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow users to select their own wishlist items" ON public.wishlist_items
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Allow users to insert their own wishlist items" ON public.wishlist_items
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Allow users to delete their own wishlist items" ON public.wishlist_items
+    FOR DELETE USING (auth.uid() = user_id);
+

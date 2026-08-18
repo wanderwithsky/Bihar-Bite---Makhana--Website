@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, ReactNode } from 'react';
 import { Product, User, Order } from '../../types';
 import { Bell, Search, LogOut, ExternalLink, ShoppingBag, Users as UsersIcon, Layers, X } from 'lucide-react';
-import { AdminSection } from './AdminLayout';
+import type { AdminSection } from './AdminLayout';
 
 interface AdminHeaderProps {
   adminName: string;

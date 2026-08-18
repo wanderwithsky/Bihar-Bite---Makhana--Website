@@ -26,6 +26,7 @@ export interface Product {
   amazonUrl?: string;
   stock?: number;
   tagline?: string;
+  video?: string;
   nutritionalInfo?: {
     calories: string;
     protein: string;
@@ -60,6 +61,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  customerId?: string | null;
   date: string;
   status: 'Pending' | 'Completed' | 'Cancelled' | 'Processing' | 'Shipped' | 'Delivered' | 'Returned';
   total: number;

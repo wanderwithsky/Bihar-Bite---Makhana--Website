@@ -43,6 +43,14 @@ export default function UserAuthScreen({
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
 
+  // Local Auth Error state
+  const [localAuthError, setLocalAuthError] = useState<string | null>(null);
+
+  // Clear local error when switching modes
+  useEffect(() => {
+    setLocalAuthError(null);
+  }, [isLogin, isForgotPassword]);
+
   // Tab State
   const [activeTab, setActiveTab] = useState<'orders' | 'purchaseHistory' | 'settings'>('orders');
 
@@ -72,12 +80,12 @@ export default function UserAuthScreen({
   const handleLoginSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!loginEmail || !loginPassword) {
-      showToast('Please enter your email and password.', 'error');
+      setLocalAuthError('Please enter your email and password.');
       return;
     }
 
     if (loginEmail.toLowerCase() === 'admin@biharbite.com') {
-      showToast('This email is reserved for admin access.', 'error');
+      setLocalAuthError('This email is reserved for admin access.');
       return;
     }
 
@@ -89,7 +97,7 @@ export default function UserAuthScreen({
           password: loginPassword,
         });
         if (error) {
-          showToast(error.message, 'error');
+          setLocalAuthError(error.message);
           setAuthLoading(false);
           return;
         }
@@ -98,11 +106,11 @@ export default function UserAuthScreen({
           if (profile) {
             onLogin(profile as any);
           } else {
-            showToast('Unable to fetch your user profile database record.', 'error');
+            setLocalAuthError('Unable to fetch your user profile database record.');
           }
         }
       } catch (err: any) {
-        showToast(err.message || 'Authentication error occurred.', 'error');
+        setLocalAuthError(err.message || 'Authentication error occurred.');
       } finally {
         setAuthLoading(false);
       }
@@ -115,12 +123,12 @@ export default function UserAuthScreen({
   const handleRegisterSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!regFullName || !regEmail || !regMobile || !regPassword || !regConfirmPassword) {
-      showToast('All fields are mandatory.', 'error');
+      setLocalAuthError('All fields are mandatory.');
       return;
     }
 
     if (regPassword !== regConfirmPassword) {
-      showToast('Passwords do not match.', 'error');
+      setLocalAuthError('Passwords do not match.');
       return;
     }
 
@@ -138,7 +146,7 @@ export default function UserAuthScreen({
           }
         });
         if (error) {
-          showToast(error.message, 'error');
+          setLocalAuthError(error.message);
           setAuthLoading(false);
           return;
         }
@@ -153,7 +161,7 @@ export default function UserAuthScreen({
           }
         }
       } catch (err: any) {
-        showToast(err.message || 'Failed to register account.', 'error');
+        setLocalAuthError(err.message || 'Failed to register account.');
       } finally {
         setAuthLoading(false);
       }
@@ -166,7 +174,7 @@ export default function UserAuthScreen({
   const handleForgotSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!forgotEmail) {
-      showToast('Please enter your email.', 'error');
+      setLocalAuthError('Please enter your email.');
       return;
     }
 
@@ -177,13 +185,13 @@ export default function UserAuthScreen({
           redirectTo: window.location.origin
         });
         if (error) {
-          showToast(error.message, 'error');
+          setLocalAuthError(error.message);
         } else {
           showToast(`Password reset link securely sent to ${forgotEmail}. Please check your inbox.`, 'success');
           setIsForgotPassword(false);
         }
       } catch (err: any) {
-        showToast(err.message || 'Error sending reset email.', 'error');
+        setLocalAuthError(err.message || 'Error sending reset email.');
       } finally {
         setAuthLoading(false);
       }
@@ -706,7 +714,29 @@ export default function UserAuthScreen({
 
       {isForgotPassword ? (
         // Forgot Password Screen
-        <div className="max-w-md mx-auto bg-[#FAF8F4] border border-[#E5DFD1] rounded-[40px] p-8 md:p-10 shadow-sm space-y-6">
+        <div className="relative max-w-md mx-auto bg-[#FAF8F4] border border-[#E5DFD1] rounded-[40px] p-8 md:p-10 shadow-sm space-y-6">
+          <AnimatePresence>
+            {localAuthError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute top-4 right-4 z-[50] max-w-[90%] md:max-w-sm bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl shadow-lg flex items-start gap-3"
+              >
+                <XCircle className="w-5 h-5 shrink-0 text-red-500 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{localAuthError}</p>
+                </div>
+                <button 
+                  onClick={() => setLocalAuthError(null)}
+                  className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500 shrink-0"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div className="text-center space-y-2">
             <h2 className="font-serif text-2xl md:text-3.5xl font-light text-[#4A4A3A]">Forgot Password</h2>
             <p className="text-xs text-on-surface-variant/80">
@@ -865,6 +895,30 @@ export default function UserAuthScreen({
 
           {/* Right Sliding Panel Container */}
           <div className="w-full md:w-[60%] relative flex flex-col shrink-0 bg-[#FAF8F4]">
+            {/* Local Auth Error Notification */}
+            <AnimatePresence>
+              {localAuthError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-4 right-4 z-[50] max-w-[90%] md:max-w-sm bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl shadow-lg flex items-start gap-3"
+                >
+                  <XCircle className="w-5 h-5 shrink-0 text-red-500 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{localAuthError}</p>
+                  </div>
+                  <button 
+                    onClick={() => setLocalAuthError(null)}
+                    className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500 shrink-0"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={isLogin ? "right-login" : "right-register"}

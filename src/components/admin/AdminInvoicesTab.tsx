@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Order } from '../../types';
-import { Search, Receipt, Printer, X, IndianRupee, CheckCircle2, Clock } from 'lucide-react';
+import { Search, Receipt, Printer, X, IndianRupee, CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { fetchAllOrders } from '../../lib/supabase';
 
 interface AdminInvoicesTabProps {
   orders: Order[];
@@ -8,18 +9,40 @@ interface AdminInvoicesTabProps {
 
 const invoiceNumberFor = (order: Order) => `INV-${order.id}`.toUpperCase();
 
-export default function AdminInvoicesTab({ orders }: AdminInvoicesTabProps) {
+export default function AdminInvoicesTab({ orders: initialOrders }: AdminInvoicesTabProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Unpaid'>('All');
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState<Order | null>(null);
+  const [liveOrders, setLiveOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const isPaid = (order: Order) => order.status === 'Completed' || order.status === 'Delivered';
+  useEffect(() => {
+    let mounted = true;
+    const loadOrders = async () => {
+      try {
+        const data = await fetchAllOrders();
+        if (mounted) {
+          setLiveOrders(data);
+        }
+      } catch (err: any) {
+        console.error('Failed to load live orders for invoices:', err);
+        if (mounted) setErrorMsg(err.message || 'Database query failed.');
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+    loadOrders();
+    return () => { mounted = false; };
+  }, []);
 
-  const totalBilled = orders.reduce((sum, o) => sum + o.total, 0);
-  const totalPaid = orders.filter(isPaid).reduce((sum, o) => sum + o.total, 0);
+  const isPaid = (order: Order) => order.paymentStatus === 'Paid';
+
+  const totalBilled = liveOrders.reduce((sum, o) => sum + o.total, 0);
+  const totalPaid = liveOrders.filter(isPaid).reduce((sum, o) => sum + o.total, 0);
   const totalOutstanding = totalBilled - totalPaid;
 
-  const filteredOrders = orders.filter(o => {
+  const filteredOrders = liveOrders.filter(o => {
     const matchesStatus = statusFilter === 'All' || (statusFilter === 'Paid' ? isPaid(o) : !isPaid(o));
     const q = search.toLowerCase().trim();
     const matchesSearch = !q || o.customerName.toLowerCase().includes(q) || o.customerEmail.toLowerCase().includes(q) || invoiceNumberFor(o).toLowerCase().includes(q);
@@ -80,29 +103,46 @@ export default function AdminInvoicesTab({ orders }: AdminInvoicesTabProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/15 text-xs text-on-surface-variant">
-              {filteredOrders.map(order => (
-                <tr key={order.id} className="hover:bg-[#FAF8F4]/35 transition-colors">
-                  <td className="py-4 px-6 font-mono font-bold text-primary">{invoiceNumberFor(order)}</td>
-                  <td className="py-4 px-4">
-                    <p className="font-bold text-primary">{order.customerName}</p>
-                    <p className="text-[10px] text-on-surface-variant/60">{order.customerEmail}</p>
-                  </td>
-                  <td className="py-4 px-4">{order.date}</td>
-                  <td className="py-4 px-4 font-mono font-bold text-primary">₹{order.total}</td>
-                  <td className="py-4 px-4">
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${isPaid(order) ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-900'}`}>
-                      {isPaid(order) ? 'Paid' : 'Unpaid'}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <button onClick={() => setActiveInvoiceOrder(order)} className="px-3.5 py-1.5 bg-[#7C8464] hover:bg-[#6A7155] text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer">
-                      View Invoice
-                    </button>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center">
+                    <Loader2 className="w-6 h-6 text-primary animate-spin mx-auto" />
                   </td>
                 </tr>
-              ))}
-              {filteredOrders.length === 0 && (
-                <tr><td colSpan={6} className="py-12 text-center text-on-surface-variant/70">No invoices match this query.</td></tr>
+              ) : filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-on-surface-variant">
+                    {errorMsg ? (
+                      <span className="text-red-500 font-bold">{errorMsg}</span>
+                    ) : search || statusFilter !== 'All' ? (
+                      "No invoices match this query."
+                    ) : (
+                      "No invoice records found."
+                    )}
+                  </td>
+                </tr>
+              ) : (
+                filteredOrders.map(order => (
+                  <tr key={order.id} className="hover:bg-[#FAF8F4]/35 transition-colors">
+                    <td className="py-4 px-6 font-mono font-bold text-primary">{invoiceNumberFor(order)}</td>
+                    <td className="py-4 px-4">
+                      <p className="font-bold text-primary">{order.customerName}</p>
+                      <p className="text-[10px] text-on-surface-variant/60">{order.customerEmail}</p>
+                    </td>
+                    <td className="py-4 px-4">{order.date}</td>
+                    <td className="py-4 px-4 font-mono font-bold text-primary">₹{order.total}</td>
+                    <td className="py-4 px-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${isPaid(order) ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-900'}`}>
+                        {isPaid(order) ? 'Paid' : 'Unpaid'}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <button onClick={() => setActiveInvoiceOrder(order)} className="px-3.5 py-1.5 bg-[#7C8464] hover:bg-[#6A7155] text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer">
+                        View Invoice
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

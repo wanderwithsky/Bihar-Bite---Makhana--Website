@@ -13,34 +13,7 @@ export default function TrackOrderScreen({ setScreen, orders }: TrackOrderScreen
   const [trackingStatus, setTrackingStatus] = useState<'idle' | 'searching' | 'found' | 'not-found'>('idle');
   const [activeTab, setActiveTab] = useState<'search' | 'info'>('search');
 
-  // Interactive sample simulation tracks
-  const sampleTrackingData: { [id: string]: Order } = {
-    'BB-1002': {
-      id: 'BB-1002',
-      date: '2026-07-15',
-      status: 'Shipped',
-      total: 1250,
-      customerName: 'Aarav Verma',
-      customerEmail: 'aarav@outlook.com',
-      shippingAddress: 'Flat 402, Lotus Orchid, Boring Road, Patna, Bihar - 800001',
-      items: [
-        { productId: 'p1', name: 'Premium Classic Fluffies', quantity: 2, weight: '250g', price: 450 },
-        { productId: 'p3', name: 'Himalayan Pink Salt Roasted', quantity: 1, weight: '500g', price: 350 }
-      ]
-    },
-    'BB-9981': {
-      id: 'BB-9981',
-      date: '2026-07-12',
-      status: 'Delivered',
-      total: 680,
-      customerName: 'Meera Deshmukh',
-      customerEmail: 'meera.d@gmail.com',
-      shippingAddress: 'Sector 15, Hiranandani Gardens, Powai, Mumbai, Maharashtra - 400076',
-      items: [
-        { productId: 'p2', name: 'Mithila Peri Peri Crunch', quantity: 4, weight: '100g', price: 170 }
-      ]
-    }
-  };
+  // Removed interactive sample simulation tracks
 
   const handleTrackSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,33 +32,6 @@ export default function TrackOrderScreen({ setScreen, orders }: TrackOrderScreen
         return;
       }
 
-      // 2. Search in hardcoded demo records
-      if (sampleTrackingData[cleanId]) {
-        setFoundOrder(sampleTrackingData[cleanId]);
-        setTrackingStatus('found');
-        setActiveTab('info');
-        return;
-      }
-
-      // If user inputs a random code like BB-XXXX, let's auto-generate a valid mockup so they always get a beautiful response!
-      if (cleanId.startsWith('BB-') && cleanId.length >= 5) {
-        const generatedMock: Order = {
-          id: cleanId,
-          date: new Date(Date.now() - 48 * 3600 * 1000).toISOString().split('T')[0], // 2 days ago
-          status: 'Processing',
-          total: 890,
-          customerName: 'Gourmet Snaker',
-          customerEmail: 'customer@biharbite.com',
-          shippingAddress: 'Lodi Colony, New Delhi, Delhi - 110003',
-          items: [
-            { productId: 'p4', name: 'Classic Salt & Pepper Roasted', quantity: 3, weight: '250g', price: 290 }
-          ]
-        };
-        setFoundOrder(generatedMock);
-        setTrackingStatus('found');
-        setActiveTab('info');
-        return;
-      }
 
       setFoundOrder(null);
       setTrackingStatus('not-found');
@@ -168,46 +114,6 @@ export default function TrackOrderScreen({ setScreen, orders }: TrackOrderScreen
               </p>
             )}
           </form>
-
-          {/* Prompt quick test samples */}
-          <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-stone-100 space-y-2.5" id="track-samples-box">
-            <span className="text-[10px] font-bold text-[#8C7D5F] uppercase tracking-wider block">Demo Consignments to Test:</span>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button 
-                onClick={() => {
-                  setOrderIdInput('BB-1002');
-                  setTrackingStatus('searching');
-                  setTimeout(() => {
-                    setFoundOrder(sampleTrackingData['BB-1002']);
-                    setTrackingStatus('found');
-                    setActiveTab('info');
-                  }, 400);
-                }}
-                className="bg-white border hover:border-stone-400 p-2 rounded-xl text-left font-mono hover:bg-stone-50 transition-all text-stone-700 cursor-pointer"
-                id="demo-consign-1"
-              >
-                <span className="text-[10px] text-stone-400 block font-sans">1. Shipped Track</span>
-                <strong>BB-1002</strong>
-              </button>
-              <button 
-                onClick={() => {
-                  setOrderIdInput('BB-9981');
-                  setTrackingStatus('searching');
-                  setTimeout(() => {
-                    setFoundOrder(sampleTrackingData['BB-9981']);
-                    setTrackingStatus('found');
-                    setActiveTab('info');
-                  }, 400);
-                }}
-                className="bg-white border hover:border-stone-400 p-2 rounded-xl text-left font-mono hover:bg-stone-50 transition-all text-stone-700 cursor-pointer"
-                id="demo-consign-2"
-              >
-                <span className="text-[10px] text-stone-400 block font-sans">2. Delivered Track</span>
-                <strong>BB-9981</strong>
-              </button>
-            </div>
-          </div>
-
           <div className="pt-2 border-t text-[11px] text-stone-400 leading-relaxed font-light" id="track-disclaimer">
             * Note: If you placed an order in the last 24 hours, tracking datasets might take a few hours to sync with courier services (Blue Dart, Delhivery).
           </div>
