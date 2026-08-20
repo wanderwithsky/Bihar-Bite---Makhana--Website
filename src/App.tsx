@@ -763,7 +763,7 @@ Message: ${details.message}`;
     if (targetOrder) {
       const updatedUsers = users.map(u => {
         if (u.email.toLowerCase() === targetOrder.customerEmail.toLowerCase()) {
-          const revisedHistory = u.orderHistory.map(oh => oh.id === orderId ? { ...oh, status } : oh);
+          const revisedHistory = (u.orderHistory || []).map(oh => oh.id === orderId ? { ...oh, status } : oh);
           return { ...u, orderHistory: revisedHistory };
         }
         return u;
@@ -772,7 +772,7 @@ Message: ${details.message}`;
 
       // Sync active profile session
       if (currentUser && currentUser.email.toLowerCase() === targetOrder.customerEmail.toLowerCase()) {
-        const revisedHistory = currentUser.orderHistory.map(oh => oh.id === orderId ? { ...oh, status } : oh);
+        const revisedHistory = (currentUser.orderHistory || []).map(oh => oh.id === orderId ? { ...oh, status } : oh);
         const revisedProfile = { ...currentUser, orderHistory: revisedHistory };
         setCurrentUser(revisedProfile);
         localStorage.setItem('bihar_bite_user_session', JSON.stringify(revisedProfile));

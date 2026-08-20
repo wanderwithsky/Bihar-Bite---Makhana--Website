@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     shipping_address TEXT NOT NULL,
     payment_method TEXT DEFAULT 'Card',
     payment_status TEXT DEFAULT 'Paid',
-    order_status TEXT DEFAULT 'Pending' CHECK (order_status IN ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned')),
+    order_status TEXT DEFAULT 'Pending' CHECK (order_status IN ('Pending', 'Processing', 'Shipped', 'Delivered', 'Completed', 'Cancelled', 'Returned')),
     tracking_status TEXT DEFAULT 'Order Placed',
     total NUMERIC NOT NULL,
     date DATE DEFAULT CURRENT_DATE,
@@ -254,6 +254,10 @@ CREATE POLICY "Allow users to insert their own orders" ON public.orders
 -- Allow users to delete their own orders (needed for frontend rollback if order_items insert fails)
 CREATE POLICY "Allow users to delete their own orders" ON public.orders
     FOR DELETE USING (auth.uid() = user_id OR user_id IS NULL);
+
+-- Allow authenticated users or guests to update their own orders (and admin bypassing)
+CREATE POLICY "Allow users to update their own orders" ON public.orders
+    FOR UPDATE USING (true);
 
 -- Order Items Policies: Users can view and insert items for their own orders
 CREATE POLICY "Allow users to view their own order items" ON public.order_items

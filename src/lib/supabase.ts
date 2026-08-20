@@ -471,7 +471,8 @@ export async function fetchUserOrders(userId: string): Promise<Order[]> {
         paymentMethod: orderRow.payment_method || 'Card',
         paymentStatus: orderRow.payment_status || 'Paid',
         trackingStatus: orderRow.tracking_status || 'Order Placed',
-        items: items
+        items: items,
+        customerId: orderRow.user_id
       } as any; // Cast as any to include extended database tracking properties dynamically
     });
   } catch (err) {
@@ -526,7 +527,8 @@ export async function fetchAllOrders(): Promise<Order[]> {
         paymentMethod: orderRow.payment_method || 'Card',
         paymentStatus: orderRow.payment_status || 'Paid',
         trackingStatus: orderRow.tracking_status || 'Order Placed',
-        items: items
+        items: items,
+        customerId: orderRow.user_id
       } as any; // Cast as any to include extended database tracking properties dynamically
     });
   } catch (err) {
@@ -600,7 +602,8 @@ export async function createOrderInDb(
     customerEmail: customerEmail,
     customerMobile: customerMobile,
     shippingAddress: shippingAddress,
-    items: items
+    items: items,
+    customerId: userId || undefined
   };
 }
 
@@ -856,11 +859,16 @@ export async function removeFromUserWishlist(userId: string, productId: string):
 export async function updateOrderStatusInDb(orderId: string, status: string): Promise<boolean> {
   if (!supabase) return false;
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('orders')
       .update({ order_status: status })
-      .eq('id', orderId);
+      .eq('id', orderId)
+      .select()
+      .single();
+
     if (error) throw error;
+    if (!data) throw new Error("Update failed (0 rows affected). Check RLS policies.");
+    
     return true;
   } catch (err) {
     console.error('Error updating order status:', err);

@@ -265,10 +265,21 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
       {/* Bottom Footer Bar */}
       <div className="max-w-7xl mx-auto px-6 pt-6 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4 text-xs text-white/60">
         <p>© 2026 Bihar Bite. Cultivating Heritage, Delivering Purity. Sourced in Bihar, enjoyed globally.</p>
-        <div className="flex gap-4 items-center">
+        <div className="flex flex-col items-center gap-2 md:gap-4 md:items-end">
           <span className="flex items-center gap-1">
             Handcrafted with <Heart className="w-3 h-3 text-[#E5D7B3] fill-[#E5D7B3]" /> from Mithila, India
           </span>
+          <p className="font-light">
+            Designed & Developed by{' '}
+            <a 
+              href="https://www.instagram.com/thei2s?igsh=MXN5bnViazkyaDJscw=="
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-white/90 hover:text-white hover:underline underline-offset-2 transition-colors duration-200"
+            >
+              I2S
+            </a>
+          </p>
         </div>
       </div>
     </footer>
