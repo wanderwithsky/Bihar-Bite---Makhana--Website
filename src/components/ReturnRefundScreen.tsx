@@ -53,7 +53,7 @@ export default function ReturnRefundScreen({ setScreen }: LegalPageProps) {
               How to Claim Free Replacement:
             </span>
             <p>
-              Please notify us within <strong>48 hours</strong> of package delivery by emailing <strong className="text-stone-900">care@biharbite.com</strong>. Include your Order ID and 2-3 clear photographs/videos of the damaged outer shipping box or inner product bag.
+              Please notify us within <strong>48 hours</strong> of package delivery by emailing <strong className="text-stone-900">Info@biharbite.com</strong>. Include your Order ID and 2-3 clear photographs/videos of the damaged outer shipping box or inner product bag.
             </p>
             <p>
               Once validated by our dispatch audit team, we will ship a fresh, brand-new replacement parcel to you completely free of charge. No physical return of the damaged product is necessary.
@@ -101,7 +101,7 @@ export default function ReturnRefundScreen({ setScreen }: LegalPageProps) {
               <Mail className="w-5 h-5 text-[#7C8464]" />
               <div>
                 <span className="text-[10px] uppercase text-stone-400 block font-bold">Email Help Desk</span>
-                <span className="text-xs text-stone-800 font-semibold">care@biharbite.com</span>
+                <span className="text-xs text-stone-800 font-semibold">Info@biharbite.com</span>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-200">

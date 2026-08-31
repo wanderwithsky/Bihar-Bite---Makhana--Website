@@ -171,7 +171,7 @@ export const generateInvoicePDF = (order: Order) => {
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
   doc.text("Bihar Bite (A division of premium regional snacks)", 14, pageHeight - 28);
-  doc.text("Contact: support@biharbite.com | +91 9876543210", 14, pageHeight - 24);
+  doc.text("Contact: Info@biharbite.com | +91 9876543210", 14, pageHeight - 24);
   doc.text("Website: www.biharbite.com | Instagram: @biharbite", 14, pageHeight - 20);
   
   doc.setFont("helvetica", "italic");

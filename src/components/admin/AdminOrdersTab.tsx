@@ -111,6 +111,24 @@ export default function AdminOrdersTab({ orders: initialOrders, onUpdateOrderSta
                 <div className="text-xs">
                   <span className="text-on-surface-variant/60">Placed by:</span> <span className="font-bold text-primary">{order.customerName}</span> <span className="text-on-surface-variant/60">({order.customerEmail})</span>
                 </div>
+                <div className="text-[10px] space-y-0.5 mt-1">
+                  <div className="flex gap-2">
+                    <span className="text-on-surface-variant/60">Payment:</span>
+                    <span className={`font-bold ${order.paymentStatus === 'Paid' ? 'text-green-600' : 'text-amber-600'}`}>
+                      {order.paymentMethod === 'online' ? 'Online' : 'COD'} - {order.paymentStatus || 'Pending'}
+                    </span>
+                  </div>
+                  {order.razorpayOrderId && (
+                    <div className="text-on-surface-variant/60">
+                      Razorpay Order: <span className="font-mono text-[#4A4A3A] font-bold">{order.razorpayOrderId}</span>
+                    </div>
+                  )}
+                  {order.razorpayPaymentId && (
+                    <div className="text-on-surface-variant/60">
+                      Razorpay Payment: <span className="font-mono text-[#4A4A3A] font-bold">{order.razorpayPaymentId}</span>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3 self-start sm:self-auto">
                 <span className="font-mono text-sm font-bold text-primary mr-1">₹{order.total}</span>

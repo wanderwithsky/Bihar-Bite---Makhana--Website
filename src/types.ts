@@ -75,6 +75,8 @@ export interface Order {
   time?: string;
   paymentMethod?: 'cod' | 'online';
   paymentStatus?: 'Pending' | 'Paid';
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
   deliveryStartDate?: string;
   deliveryEndDate?: string;
 }

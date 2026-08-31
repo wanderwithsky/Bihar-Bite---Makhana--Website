@@ -52,7 +52,7 @@ export default function AdminLayout(props: AdminLayoutProps) {
   // Store Configuration State
   const DEFAULT_CONFIG = {
     storeName: 'Bihar Bite',
-    supportEmail: 'hello@biharbite.com',
+    supportEmail: 'Info@biharbite.com',
     supportPhone: '+91 98765 43210',
     origin: 'Mithila, Bihar'
   };

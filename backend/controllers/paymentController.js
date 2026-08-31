@@ -1,48 +1,88 @@
 import crypto from 'crypto';
 import razorpay from '../config/razorpay.js';
-import db from '../config/db.js';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+// Ensure dotenv is loaded before reading process.env
+dotenv.config();
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export const createOrder = async (req, res) => {
   try {
-    const { amount, customerName, customerEmail, customerPhone } = req.body;
+    const { app_order_id, amount: clientAmount, customerName, customerEmail, customerPhone } = req.body;
 
-    if (!amount || amount < 100) {
+    if (!app_order_id) {
+      return res.status(400).json({ error: 'Missing order ID' });
+    }
+
+    console.log('[RAZORPAY] using Supabase URL:', supabaseUrl.substring(0, 20) + '...');
+    console.log('[RAZORPAY] querying order ID:', app_order_id);
+
+    let finalAmountRupees = clientAmount; // Fallback
+
+    // Securely fetch the order total from the server-side database where possible
+    const { data: dbOrder, error: orderError } = await supabase
+      .from('orders')
+      .select('total')
+      .eq('id', app_order_id)
+      .single();
+
+    if (orderError || !dbOrder) {
+      console.log('[RAZORPAY] could not fetch from DB (RLS or missing), trusting client amount:', finalAmountRupees);
+    } else {
+      finalAmountRupees = dbOrder.total;
+      console.log('[RAZORPAY] securely fetched order from DB:', dbOrder);
+      console.log('[RAZORPAY] validated amount (rupees):', finalAmountRupees);
+    }
+
+    const amountInPaise = Math.round(Number(finalAmountRupees) * 100); // amount in smallest currency unit (paise)
+    
+    console.log('[RAZORPAY] normalized amount in paise:', amountInPaise);
+
+    if (!amountInPaise || isNaN(amountInPaise) || amountInPaise < 100) {
       return res.status(400).json({ error: 'Amount must be at least 100 paise' });
     }
 
     const options = {
-      amount, // amount in smallest currency unit (paise)
+      amount: amountInPaise, // amount in smallest currency unit (paise)
       currency: 'INR',
       receipt: `receipt_${Date.now()}`
     };
 
-    const order = await razorpay.orders.create(options);
+    const razorpayOrder = await razorpay.orders.create(options);
+    console.log('[RAZORPAY] order created:', razorpayOrder.id);
 
-    // Store in MySQL database
-    const [result] = await db.query(
-      `INSERT INTO orders (razorpay_order_id, amount, customer_name, customer_email, customer_phone, status) 
-       VALUES (?, ?, ?, ?, ?, 'created')`,
-      [order.id, amount, customerName, customerEmail, customerPhone]
-    );
+    // Securely update the Supabase order with the Razorpay Order ID where possible
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ razorpay_order_id: razorpayOrder.id })
+      .eq('id', app_order_id);
+
+    if (updateError) {
+      console.log('[RAZORPAY] note: could not update razorpay_order_id in DB (RLS restricted or column missing). Will verify upon payment completion.', updateError.message);
+    }
 
     res.status(200).json({
       success: true,
-      order_id: order.id,
-      amount: order.amount,
-      currency: order.currency
+      order_id: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency
     });
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
-    res.status(500).json({ error: 'Failed to create order' });
+    res.status(500).json({ error: 'Failed to create order', details: error.message || String(error) });
   }
 };
 
 export const verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, app_order_id } = req.body;
 
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ error: 'Missing payment details' });
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !app_order_id) {
+      return res.status(400).json({ error: 'Missing payment details or order ID' });
     }
 
     const body = razorpay_order_id + "|" + razorpay_payment_id;
@@ -55,11 +95,22 @@ export const verifyPayment = async (req, res) => {
     const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
-      // Payment is successful, update status in DB
-      await db.query(
-        `UPDATE orders SET razorpay_payment_id = ?, status = 'paid' WHERE razorpay_order_id = ?`,
-        [razorpay_payment_id, razorpay_order_id]
-      );
+      // Payment is successful, update status in Supabase DB
+      const { error: dbError } = await supabase
+        .from('orders')
+        .update({ 
+          payment_status: 'Paid',
+          payment_method: 'online',
+          razorpay_order_id,
+          razorpay_payment_id
+        })
+        .eq('id', app_order_id);
+
+      if (dbError) {
+        console.error('Failed to update Supabase order:', dbError);
+        // Even if DB update fails, signature was valid, but we might want to return 500
+        return res.status(500).json({ success: false, error: 'Database update failed' });
+      }
 
       res.status(200).json({
         success: true,
@@ -74,5 +125,55 @@ export const verifyPayment = async (req, res) => {
   } catch (error) {
     console.error('Error verifying payment:', error);
     res.status(500).json({ error: 'Failed to verify payment' });
+  }
+};
+
+export const handleWebhook = async (req, res) => {
+  try {
+    const signature = req.headers['x-razorpay-signature'];
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    if (!signature || !webhookSecret) {
+      return res.status(400).send('Webhook signature or secret missing');
+    }
+
+    // Verify webhook signature
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+
+    if (expectedSignature !== signature) {
+      return res.status(400).send('Invalid webhook signature');
+    }
+
+    const { event, payload } = req.body;
+
+    if (event === 'payment.captured' || event === 'order.paid') {
+      const paymentEntity = payload.payment?.entity || payload.order?.entity;
+      const razorpay_order_id = paymentEntity?.order_id || paymentEntity?.id;
+
+      if (razorpay_order_id) {
+        // Idempotently update the order
+        const { error: dbError } = await supabase
+          .from('orders')
+          .update({
+            paymentStatus: 'Paid',
+            paymentMethod: 'online'
+          })
+          .eq('razorpay_order_id', razorpay_order_id);
+
+        if (dbError) {
+          console.error('Webhook: Failed to update Supabase order:', dbError);
+          // Return 500 so Razorpay retries the webhook
+          return res.status(500).send('Failed to process webhook');
+        }
+      }
+    }
+
+    res.status(200).send('Webhook processed');
+  } catch (error) {
+    console.error('Webhook processing error:', error);
+    res.status(500).send('Internal Server Error');
   }
 };

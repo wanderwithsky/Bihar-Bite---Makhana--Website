@@ -161,7 +161,7 @@ export default function BulkScreen({ onSubmitInquiry }: BulkScreenProps) {
                 WhatsApp Direct Trade
               </button>
               <a 
-                href="mailto:info@biharbite.com"
+                href="mailto:Info@biharbite.com"
                 className="bg-primary-container text-white border border-white/20 font-semibold text-xs px-5 py-2.5 rounded-full hover:bg-white/10 transition-all flex items-center gap-1.5"
               >
                 <Mail className="w-4 h-4" />

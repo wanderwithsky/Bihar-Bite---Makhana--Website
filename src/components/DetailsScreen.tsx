@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, ScreenType } from '../types';
+import ProductInfoSections from './ProductInfoSections';
 
 interface DetailsScreenProps {
   setScreen: (screen: ScreenType) => void;
@@ -405,45 +406,8 @@ export default function DetailsScreen({
 
         </div>
 
-        {/* ─── DETAILED DESCRIPTION ─── */}
-        <div className="mt-24 max-w-4xl mx-auto">
-          <h3 className="text-center font-serif text-3xl md:text-4xl font-bold text-[#143A2A] mb-12">Product Details & Benefits</h3>
-          
-          <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <h4 className="text-xs font-bold text-[#C28E63] tracking-[0.2em] uppercase mb-4">Nutritional Information</h4>
-              <p className="text-stone-600 text-sm leading-relaxed mb-6">
-                Makhana is a superfood rich in protein, magnesium, and essential antioxidants. With zero cholesterol and naturally low sodium, it is the ultimate guilt-free snack for mindful eating.
-              </p>
-
-              <h4 className="text-xs font-bold text-[#C28E63] tracking-[0.2em] uppercase mb-4">Ingredients</h4>
-              <p className="text-stone-600 text-sm leading-relaxed mb-6">
-                Premium graded Makhana (Fox Nuts), Cold-pressed Oil, Himalayan Pink Salt, and Natural Spices. No artificial flavors or preservatives.
-              </p>
-              
-              <h4 className="text-xs font-bold text-[#C28E63] tracking-[0.2em] uppercase mb-4">Storage Instructions</h4>
-              <p className="text-stone-600 text-sm leading-relaxed mb-6">
-                Store in a cool, dry place. Once opened, keep it tightly sealed in the original packaging or transfer to an airtight container to preserve the perfect crunch.
-              </p>
-
-              <h4 className="text-xs font-bold text-[#C28E63] tracking-[0.2em] uppercase mb-4">Shipping & Returns</h4>
-              <p className="text-stone-600 text-sm leading-relaxed">
-                Orders are processed within 24 hours. Free shipping on orders over ₹999. If you are not satisfied with the quality, we offer a hassle-free 7-day return policy.
-              </p>
-            </div>
-            
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-stone-100 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#143A2A]/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <h4 className="font-serif text-2xl font-bold text-[#143A2A] mb-4">Direct from Ponds</h4>
-              <p className="text-stone-600 text-sm leading-relaxed mb-6 relative z-10">
-                Our water lily seeds are sourced directly from the untouched wetlands of Mithila. Carefully harvested by skilled farmers, they undergo a rigorous sorting process. Only the largest, highest-grade seeds make it into a Bihar Bite package.
-              </p>
-              <div className="flex items-center gap-2 text-[#C28E63] font-bold text-xs tracking-wider uppercase">
-                <Leaf className="w-4 h-4" /> 100% Organic Origin
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* ─── DETAILED PRODUCT INFORMATION ─── */}
+        <ProductInfoSections product={product} />
 
         {/* ─── YOU MAY ALSO LIKE ─── */}
         <div className="mt-32">

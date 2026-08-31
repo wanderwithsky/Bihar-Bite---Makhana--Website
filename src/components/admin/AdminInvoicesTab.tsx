@@ -173,7 +173,7 @@ function InvoiceModal({ order, onClose, paid }: { order: Order; onClose: () => v
             <div>
               <h2 className="font-serif text-2xl font-bold text-primary">Bihar Bite</h2>
               <p className="text-[11px] text-on-surface-variant/70 mt-1">Mithila, Bihar, India</p>
-              <p className="text-[11px] text-on-surface-variant/70">hello@biharbite.com · +91 98765 43210</p>
+              <p className="text-[11px] text-on-surface-variant/70">Info@biharbite.com · +91 98765 43210</p>
             </div>
             <div className="text-right">
               <h3 className="font-serif text-xl font-bold text-secondary">INVOICE</h3>

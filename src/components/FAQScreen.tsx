@@ -88,7 +88,7 @@ export default function FAQScreen({ setScreen }: FAQScreenProps) {
         {
           id: 'q-10',
           question: 'Do you support wholesale supply, white-labeling, or exports?',
-          answer: 'Yes, we are a certified bulk supplier and global exporter. We provide customized bulk bags, private white-labeling for health brands, and extensive corporate gifting solutions. Please navigate to our Bulk Orders section or contact our direct trade desk at trade@biharbite.com.'
+          answer: 'Yes, we are a certified bulk supplier and global exporter. We provide customized bulk bags, private white-labeling for health brands, and extensive corporate gifting solutions. Please navigate to our Bulk Orders section or contact our direct trade desk at Info@biharbite.com.'
         }
       ]
     }
@@ -153,9 +153,9 @@ export default function FAQScreen({ setScreen }: FAQScreenProps) {
                 <span className="w-8 h-8 rounded-xl bg-white border border-stone-200/50 flex items-center justify-center text-[#7C8464]"><MessageSquare className="w-4 h-4" /></span>
                 WhatsApp: +91 79853 47849
               </a>
-              <a href="mailto:info@biharbite.com" className="flex items-center gap-3.5 hover:text-[#7C8464] transition-colors font-medium">
+              <a href="mailto:Info@biharbite.com" className="flex items-center gap-3.5 hover:text-[#7C8464] transition-colors font-medium">
                 <span className="w-8 h-8 rounded-xl bg-white border border-stone-200/50 flex items-center justify-center text-[#7C8464]"><Mail className="w-4 h-4" /></span>
-                info@biharbite.com
+                Info@biharbite.com
               </a>
               <a href="tel:+919336311140" className="flex items-center gap-3.5 hover:text-[#7C8464] transition-colors font-medium">
                 <span className="w-8 h-8 rounded-xl bg-white border border-stone-200/50 flex items-center justify-center text-[#7C8464]"><Phone className="w-4 h-4" /></span>

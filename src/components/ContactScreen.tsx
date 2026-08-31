@@ -1,5 +1,6 @@
-import { Mail, Phone, MapPin, Clock, Sparkles, HelpCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Sparkles } from 'lucide-react';
 import ContactForm from './ContactForm';
+import FAQSection from './FAQSection';
 
 interface ContactScreenProps {
   onSubmitContact: (details: {
@@ -17,10 +18,10 @@ export default function ContactScreen({ onSubmitContact }: ContactScreenProps) {
     {
       icon: <Mail className="w-5 h-5 text-secondary" />,
       title: 'Email Correspondence',
-      value: 'info@biharbite.com',
+      value: 'Info@biharbite.com',
       description: 'Our team responds within 12-24 hours.',
       actionText: 'Write to us',
-      link: 'mailto:info@biharbite.com',
+      link: 'mailto:Info@biharbite.com',
     },
     {
       icon: <Phone className="w-5 h-5 text-secondary" />,
@@ -48,20 +49,6 @@ export default function ContactScreen({ onSubmitContact }: ContactScreenProps) {
     },
   ];
 
-  const faqs = [
-    {
-      question: 'Where is Bihar Bite Makhana sourced from?',
-      answer: 'Our water lily seeds are harvested sustainably from the authentic wetland biomes of Mithila, Bihar, by heritage farm collectives using traditional methodologies passed down over generations.',
-    },
-    {
-      question: 'Are there artificial preservatives or flavorings added?',
-      answer: 'Never. Bihar Bite prides itself on absolute purity. We use slow-roasted techniques with pure cow ghee or cold-pressed olive oils, finished with authentic spices and natural seasonings.',
-    },
-    {
-      question: 'Do you offer custom gifting packs or bulk exports?',
-      answer: 'Yes! We supply boutique retail, luxury wedding hampers, corporate gifting, and international bulk exports. Use our Inquire Bulk screen or drop a custom note here.',
-    },
-  ];
 
   return (
     <div id="hero" className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 font-sans">
@@ -184,25 +171,9 @@ export default function ContactScreen({ onSubmitContact }: ContactScreenProps) {
         </div>
       </div>
 
-      {/* Mini FAQ Section */}
-      <div className="mt-20 border-t border-outline-variant/30 pt-16">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <HelpCircle className="w-6 h-6 text-secondary mx-auto" />
-            <h2 className="font-serif text-2xl text-primary">Frequently Asked Queries</h2>
-            <p className="text-xs text-on-surface-variant/80">Quick clarifications before dispatching messages</p>
-          </div>
 
-          <div className="space-y-6">
-            {faqs.map((faq, idx) => (
-              <div key={idx} className="bg-[#F1EDE4]/50 rounded-2xl p-6 border border-outline-variant/10 space-y-2">
-                <h4 className="font-serif text-base font-bold text-on-surface-variant">{faq.question}</h4>
-                <p className="text-xs md:text-sm text-on-surface-variant/85 leading-relaxed">{faq.answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* FAQ SECTION */}
+      <FAQSection />
     </div>
   );
 }

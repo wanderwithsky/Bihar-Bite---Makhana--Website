@@ -152,12 +152,20 @@ export default function Header({
 
   const navLinks = [
     { label: 'HOME', path: '/' },
-    { label: 'PRODUCTS', path: '/shop' },
+    { label: 'SHOP', path: '/products' },
+    { label: 'WHOLESALE', path: '/bulk' },
     { label: 'ABOUT', path: '/about' },
-    { label: 'BLOG', path: '/blog' },
-    { label: 'BULK & EXPORT', path: '/bulk' },
     { label: 'CONTACT', path: '/contact' },
   ];
+
+  const isNavActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    if (path === '/products') return location.pathname === '/products' || location.pathname.startsWith('/product/');
+    if (path === '/bulk') return location.pathname.startsWith('/bulk');
+    if (path === '/about') return location.pathname === '/about';
+    if (path === '/contact') return location.pathname === '/contact';
+    return location.pathname === path;
+  };
 
   const showHeroNav = location.pathname === '/' && isHeroVisible;
 
@@ -241,11 +249,22 @@ export default function Header({
                           window.scrollTo(0,0);
                         }
                       }}
-                      className={`text-[11px] font-bold tracking-[0.15em] uppercase transition-colors ${
-                        location.pathname === destPath ? 'text-[#7C8464]' : 'text-[#4A4A3A] hover:text-[#7C8464]'
+                      className={
+                        link.label === 'WHOLESALE'
+                        ? `relative text-[11px] font-bold tracking-[0.15em] uppercase transition-colors px-3 py-1.5 rounded-md flex items-center gap-1.5 ${isNavActive(destPath) ? 'bg-[#143A2A] text-white' : 'bg-[#FDFCF8] text-[#143A2A] border border-[#143A2A]/20 hover:bg-[#143A2A] hover:text-white shadow-sm'}`
+                        : `relative text-[11px] font-bold tracking-[0.15em] uppercase transition-colors py-1 ${
+                        isNavActive(destPath) ? 'text-[#143A2A]' : 'text-[#4A4A3A] hover:text-[#143A2A]'
                       }`}
                     >
-                      {link.label}
+                      <span className="relative inline-block">
+                        {link.label}
+                        {isNavActive(destPath) && (
+                          <motion.div layoutId="underline-desktop" className="absolute -bottom-1 left-0 right-0 h-[1.5px] bg-[#143A2A]" />
+                        )}
+                      </span>
+                      {link.label === 'WHOLESALE' && (
+                        <span className={`text-[8px] px-1.5 py-0.5 rounded-sm tracking-wider ${isNavActive(destPath) ? 'bg-white/20' : 'bg-[#C28E63]/10 text-[#C28E63]'}`}>B2B</span>
+                      )}
                     </Link>
                   );
                 })}
@@ -491,11 +510,24 @@ export default function Header({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 + 0.1 }}
                       onClick={() => handleNavClick(link.path)}
-                      className={`text-[10px] tracking-[0.2em] font-bold uppercase transition-colors ${
-                        location.pathname === link.path ? 'text-[#7C8464]' : 'text-[#4A4A3A] hover:text-[#7C8464]'
+                      className={
+                        link.label === 'WHOLESALE'
+                        ? `relative text-[10px] tracking-[0.2em] font-bold uppercase transition-colors px-3 py-1.5 rounded-full flex items-center gap-1.5 ${
+                            isNavActive(link.path) ? 'bg-[#143A2A] text-white' : 'bg-[#E8E2D9] text-[#143A2A] hover:bg-[#143A2A] hover:text-white border border-[#C28E63]/30'
+                          }`
+                        : `relative text-[10px] tracking-[0.2em] font-bold uppercase transition-colors py-1 ${
+                        isNavActive(link.path) ? 'text-[#143A2A]' : 'text-[#4A4A3A] hover:text-[#143A2A]'
                       }`}
                     >
-                      {link.label}
+                      <span className="relative inline-block">
+                        {link.label}
+                        {isNavActive(link.path) && (
+                          <motion.div layoutId="underline-floating" className="absolute -bottom-1 left-0 right-0 h-[1.5px] bg-[#143A2A]" />
+                        )}
+                      </span>
+                      {link.label === 'WHOLESALE' && (
+                        <span className={`text-[8px] px-1.5 py-0.5 rounded-full tracking-wider ${isNavActive(link.path) ? 'bg-white/20' : 'bg-[#143A2A]/10'}`}>B2B</span>
+                      )}
                     </motion.button>
                   ))}
                 </div>
@@ -590,11 +622,16 @@ export default function Header({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 + 0.1 }}
                         onClick={() => handleNavClick(link.path)}
-                        className={`text-[9px] tracking-[0.15em] font-bold uppercase transition-colors px-2 py-1 ${
-                          location.pathname === link.path ? 'text-[#7C8464] bg-stone-100 rounded' : 'text-stone-500'
+                        className={`relative text-[9px] tracking-[0.15em] font-bold uppercase transition-colors px-2 py-1 ${
+                          isNavActive(link.path) ? 'text-[#143A2A]' : 'text-stone-500'
                         }`}
                       >
-                        {link.label}
+                        <span className="relative inline-block">
+                          {link.label}
+                          {isNavActive(link.path) && (
+                            <motion.div layoutId="underline-mobile-fallback" className="absolute -bottom-1 left-0 right-0 h-[1.5px] bg-[#143A2A]" />
+                          )}
+                        </span>
                       </motion.button>
                     ))}
                    </div>
@@ -649,10 +686,9 @@ export default function Header({
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 custom-scrollbar">
                 {[
                   { label: 'Home', path: '/' },
-                  { label: 'Products', path: '/shop' },
+                  { label: 'Shop', path: '/products' },
+                  { label: 'Wholesale', path: '/bulk' },
                   { label: 'About', path: '/about' },
-                  { label: 'Blog', path: '/blog' },
-                  { label: 'Bulk & Export', path: '/bulk' },
                   { label: 'Contact', path: '/contact' },
                   { label: 'Wishlist', action: () => setIsWishlistOpen(true) },
                   { label: 'My Account', action: currentUser ? () => navigate('/account') : onOpenAuthModal },
@@ -668,9 +704,23 @@ export default function Header({
                         navigate(item.path);
                       }
                     }}
-                    className="w-full h-[56px] flex items-center px-4 rounded-xl text-[15px] font-bold text-stone-600 hover:bg-[#F8F5EE] hover:text-[#183D2F] transition-colors text-left"
+                    className={`relative w-full h-[56px] flex items-center px-4 rounded-xl text-[15px] font-bold transition-colors text-left ${
+                      item.label === 'Wholesale'
+                        ? 'bg-[#143A2A]/5 text-[#143A2A] border border-[#143A2A]/10 hover:bg-[#143A2A]/10'
+                        : isNavActive(item.path || '') ? 'text-[#143A2A] bg-[#F8F5EE]' : 'text-stone-600 hover:bg-[#F8F5EE] hover:text-[#183D2F]'
+                    }`}
                   >
-                    {item.label}
+                    <span className="relative inline-block">
+                      {item.label}
+                      {isNavActive(item.path || '') && (
+                        <motion.div layoutId="underline-drawer" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#143A2A]" />
+                      )}
+                    </span>
+                    {item.label === 'Wholesale' && (
+                      <span className="ml-2 text-[9px] bg-[#C28E63] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        B2B
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>

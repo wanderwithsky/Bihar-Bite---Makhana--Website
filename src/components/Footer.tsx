@@ -108,11 +108,7 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
                 Contact Us
               </Link>
             </li>
-            <li>
-              <Link to="/blog" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4">
-                Our Journal & Blog
-              </Link>
-            </li>
+
             <li>
               <Link to="/faqs" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors hover:underline underline-offset-4">
                 FAQs
@@ -211,8 +207,8 @@ export default function Footer({ setScreen, onSubscribe }: FooterProps) {
               </a>
             </li>
             <li>
-              <a href="mailto:info@biharbite.com" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
-                Email: info@biharbite.com
+              <a href="mailto:Info@biharbite.com" className="hover:text-white transition-colors hover:underline underline-offset-4 block">
+                Email: Info@biharbite.com
               </a>
             </li>
             <li>

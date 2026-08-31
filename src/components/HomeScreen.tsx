@@ -7,6 +7,8 @@ import { Product, ScreenType } from '../types';
 import ProcessJourney from './ProcessJourney';
 import GallerySection from './GallerySection';
 import GlobalBackground from './GlobalBackground';
+import B2BSection from './B2BSection';
+import FAQSection from './FAQSection';
 
 interface HomeScreenProps {
   setScreen: (screen: ScreenType) => void;
@@ -880,6 +882,9 @@ export default function HomeScreen({
       {/* ─── OUR GALLERY SECTION ─── */}
       <GallerySection />
 
+      {/* ─── B2B / WHOLESALE SECTION ─── */}
+      <B2BSection onNavigateBulk={() => setScreen('bulk')} />
+
       {/* ─── OUR HERITAGE HUB LOCATION SECTION ─── */}
       <section className="py-20 md:py-32 bg-transparent relative">
         <div className="max-w-6xl mx-auto px-6">
@@ -908,6 +913,9 @@ export default function HomeScreen({
           </div>
         </div>
       </section>
+      
+      {/* ─── FAQ SECTION ─── */}
+      <FAQSection />
       
     </div>
   );

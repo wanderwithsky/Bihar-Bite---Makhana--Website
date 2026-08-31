@@ -82,6 +82,16 @@ CREATE TABLE IF NOT EXISTS public.order_items (
     price NUMERIC NOT NULL
 );
 
+-- 5.5. Create Order Notifications table
+CREATE TABLE IF NOT EXISTS public.order_notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
+    channel TEXT CHECK (channel IN ('email', 'whatsapp')),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(order_id, channel)
+);
+
 -- 6. Seed initial Products data
 INSERT INTO public.products (id, name, description, price, original_price, category, flavors, image, gallery_images, weights, weight_prices, rating, review_count, is_bestseller, is_new, tagline, nutritional_info, sku, stock_quantity, status)
 VALUES 

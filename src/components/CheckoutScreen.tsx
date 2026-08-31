@@ -21,6 +21,7 @@ interface CheckoutScreenProps {
   }) => Promise<Order | void>;
   currentUser: User | null;
   setScreen?: (screen: ScreenType) => void;
+  onPaymentVerified?: (order: Order) => void;
   onClose: () => void;
 }
 
@@ -30,8 +31,23 @@ export default function CheckoutScreen({
   onOrderSuccess,
   currentUser,
   setScreen,
+  onPaymentVerified,
   onClose
 }: CheckoutScreenProps) {
+  // Script loader utility
+  const loadScript = (src: string) => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  };
   const navigate = useNavigate();
   const isOrderPlaced = React.useRef(false);
 
@@ -94,7 +110,152 @@ export default function CheckoutScreen({
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (paymentMethod === 'online') {
-      alert("Online payment is coming soon. Please select Cash on Delivery for now.");
+      setIsSubmitting(true);
+      try {
+        // Prepare address
+        let finalAddress = '';
+        if (selectedAddressId === 'new' || !currentUser?.savedAddresses?.length) {
+          finalAddress = `${formData.house}, ${formData.street}${formData.landmark ? `, Near ${formData.landmark}` : ''}, ${formData.city}, ${formData.state} - ${formData.pincode}`;
+        } else {
+          const addr = currentUser.savedAddresses.find(a => a.id === selectedAddressId);
+          if (addr) {
+            finalAddress = `${addr.streetAddress}${addr.apartment ? `, ${addr.apartment}` : ''}, ${addr.city}, ${addr.state} - ${addr.pincode}`;
+            formData.phone = addr.mobile || formData.phone;
+            formData.name = addr.fullName || formData.name;
+          }
+        }
+
+        // 1. Create a Pending Order in Supabase
+        isOrderPlaced.current = true;
+        const pendingOrder = await onOrderSuccess({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: finalAddress,
+          saveAddress: formData.saveAddress && selectedAddressId === 'new',
+          paymentMethod: 'online',
+          isInitiation: true
+        });
+
+        if (!pendingOrder) {
+          alert('Failed to initiate order. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 2. Load Razorpay script
+        const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+        if (!res) {
+          alert('Razorpay SDK failed to load. Are you online?');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 3. Create Order Backend
+        const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+        console.log('[RAZORPAY] checkout total (rupees):', total);
+        console.log('[RAZORPAY] amount sent to backend (app_order_id):', (pendingOrder as Order).id);
+        console.log('[RAZORPAY] create-order request started');
+        const orderResponse = await fetch(`${baseUrl}/api/payment/create-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            app_order_id: (pendingOrder as Order).id,
+            amount: total, // Frontend explicitly sends rupees
+            customerName: formData.name,
+            customerEmail: formData.email,
+            customerPhone: formData.phone
+          })
+        });
+
+        console.log('[RAZORPAY] response status:', orderResponse.status);
+        
+        const orderDataText = await orderResponse.text();
+        console.log('[RAZORPAY] response body:', orderDataText);
+        
+        let orderData;
+        try {
+          orderData = JSON.parse(orderDataText);
+        } catch(e) {
+          alert(`Server returned non-JSON response. Status: ${orderResponse.status}`);
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (!orderData.success) {
+          alert('Unable to start online payment. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 3. Initialize Razorpay Modal
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Frontend key
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: 'Bihar Bite',
+          description: 'Premium Makhana Purchase',
+          order_id: orderData.order_id,
+          handler: async function (response: any) {
+            try {
+              // 4. Verify Payment Backend
+              const verifyResponse = await fetch(`${baseUrl}/api/payment/verify-payment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  app_order_id: (pendingOrder as Order).id
+                })
+              });
+              
+              const verifyData = await verifyResponse.json();
+
+              if (verifyData.success) {
+                // Payment success, order already in DB, just trigger verification callback
+                if (onPaymentVerified) {
+                  onPaymentVerified(pendingOrder as Order);
+                }
+                setConfirmedOrder(pendingOrder as Order);
+                setIsSuccess(true);
+              } else {
+                alert('Payment verification failed.');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Payment verification failed.');
+            } finally {
+              setIsSubmitting(false);
+            }
+          },
+          prefill: {
+            name: formData.name,
+            email: formData.email,
+            contact: formData.phone
+          },
+          theme: {
+            color: '#143A2A'
+          },
+          modal: {
+            ondismiss: function() {
+              setIsSubmitting(false);
+            }
+          }
+        };
+
+        const paymentObject = new (window as any).Razorpay(options);
+        paymentObject.on('payment.failed', function (response: any) {
+          alert(`Payment failed: ${response.error.description}`);
+          setIsSubmitting(false);
+        });
+        paymentObject.open();
+
+      } catch (err) {
+        console.error(err);
+        alert('Failed to initiate online payment.');
+        setIsSubmitting(false);
+      }
       return;
     }
 
@@ -549,9 +710,6 @@ export default function CheckoutScreen({
                         <h3 className="font-bold text-stone-900 mb-1">Online Payment</h3>
                         <p className="text-sm text-stone-500">Pay securely online with Cards/UPI.</p>
                       </div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#C28E63] bg-[#C28E63]/10 px-3 py-1 rounded-full">
-                        Coming Soon
-                      </span>
                     </div>
                   </label>
 

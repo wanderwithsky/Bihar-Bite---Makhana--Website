@@ -9,7 +9,6 @@ import BulkScreen from './components/BulkScreen';
 import ContactScreen from './components/ContactScreen';
 import AboutScreen from './components/AboutScreen';
 import OurStoryScreen from './components/OurStoryScreen';
-import BlogScreen from './components/BlogScreen';
 import PrivacyPolicyScreen from './components/PrivacyPolicyScreen';
 import TermsConditionsScreen from './components/TermsConditionsScreen';
 import ShippingPolicyScreen from './components/ShippingPolicyScreen';
@@ -55,12 +54,11 @@ export default function App() {
   const setScreen = (screen: ScreenType) => {
     switch (screen) {
       case 'home': navigate('/'); break;
-      case 'shop': navigate('/shop'); break;
+      case 'shop': navigate('/products'); break;
       case 'details': navigate('/details'); break;
       case 'bulk': navigate('/bulk'); break;
       case 'contact': navigate('/contact'); break;
       case 'about': navigate('/about'); break;
-      case 'blog': navigate('/blog'); break;
       case 'privacy-policy': navigate('/privacy-policy'); break;
       case 'terms-conditions': navigate('/terms-and-conditions'); break;
       case 'shipping-policy': navigate('/shipping-policy'); break;
@@ -390,7 +388,7 @@ export default function App() {
   };
 
   // Unified Checkout Handler for both Cart and Buy Now flows
-  const handleUnifiedOrderSuccess = async (details: { name: string; email: string; phone: string; address: string, saveAddress?: boolean, paymentMethod?: 'cod' | 'online' }): Promise<Order | void> => {
+  const handleUnifiedOrderSuccess = async (details: { name: string; email: string; phone: string; address: string, saveAddress?: boolean, paymentMethod?: 'cod' | 'online', isInitiation?: boolean }): Promise<Order | void> => {
     const sourceItems = buyNowItem 
       ? [{
           productId: buyNowItem.product.id,
@@ -459,7 +457,7 @@ export default function App() {
       shippingAddress: details.address,
       items: sourceItems,
       paymentMethod: details.paymentMethod || 'cod',
-      paymentStatus: details.paymentMethod === 'online' ? 'Paid' : 'Pending',
+      paymentStatus: 'Pending', // Initially always Pending until verification
       deliveryStartDate,
       deliveryEndDate,
       customerId: currentUser ? currentUser.id : null
@@ -476,7 +474,7 @@ export default function App() {
           finalTotal,
           sourceItems,
           details.paymentMethod || 'cod',
-          details.paymentMethod === 'online' ? 'Paid' : 'Pending'
+          'Pending' // always pending initially
         );
         newDbOrder = { ...newOrder, ...newDbOrder }; // merge to keep local fields
 
@@ -494,9 +492,29 @@ export default function App() {
         }
         
         setOrders(prev => [newDbOrder, ...prev]);
+
+        if (details.isInitiation) {
+          // If just initiating (Online Payment), stop here. Return the order.
+          return newDbOrder;
+        }
+
+        // For COD, finish the process immediately
         if (buyNowItem) setBuyNowItem(null);
         else setCart([]);
         showToast('Secure Order placed successfully!', 'success');
+
+        // Trigger order confirmation notifications (Fire and Forget)
+        try {
+          const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+          fetch(`${baseUrl}/api/notifications/order-confirmation`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: newDbOrder })
+          }).catch(err => console.error('Failed to trigger notifications:', err));
+        } catch (err) {
+          console.error('Notification dispatch error:', err);
+        }
+
         return newDbOrder;
       } catch (err: any) {
         console.error('Supabase order creation failed:', err);
@@ -530,10 +548,37 @@ export default function App() {
     });
     persistUsers(updatedUsers);
 
+    if (details.isInitiation) {
+      return newOrder;
+    }
+
     if (buyNowItem) setBuyNowItem(null);
     else setCart([]);
     showToast('Secure Order placed successfully!', 'success');
     return newOrder;
+  };
+
+  const handleOnlinePaymentVerified = (order: Order) => {
+    // 1. Update local order state to Paid
+    const updatedOrder = { ...order, paymentStatus: 'Paid' };
+    setOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
+    
+    // 2. Clear cart
+    if (buyNowItem) setBuyNowItem(null);
+    else setCart([]);
+    showToast('Secure Order placed successfully!', 'success');
+
+    // 3. Trigger notification
+    try {
+      const baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+      fetch(`${baseUrl}/api/notifications/order-confirmation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order: updatedOrder })
+      }).catch(err => console.error('Failed to trigger notifications:', err));
+    } catch (err) {
+      console.error('Notification dispatch error:', err);
+    }
   };
 
   // Newsletter subscription
@@ -605,7 +650,7 @@ Message: ${details.message}`;
   };
 
   const handleSearchSubmit = () => {
-    navigate('/shop');
+    navigate('/products');
   };
 
   // --- REGULAR USER SIGN IN / REGISTER FLOWS ---
@@ -852,7 +897,7 @@ Message: ${details.message}`;
               />
             } />
 
-            <Route path="/shop" element={
+            <Route path="/products" element={
               <ShopScreen
                 setScreen={setScreen}
                 selectedCategory={selectedCategory}
@@ -868,7 +913,7 @@ Message: ${details.message}`;
               />
             } />
 
-            <Route path="/details" element={<Navigate to="/shop" replace />} />
+            <Route path="/details" element={<Navigate to="/products" replace />} />
             
             <Route path="/product/:slug" element={
               <DetailsScreen
@@ -891,6 +936,7 @@ Message: ${details.message}`;
                 buyNowItem={buyNowItem}
                 cart={cart}
                 onOrderSuccess={handleUnifiedOrderSuccess}
+                onPaymentVerified={handleOnlinePaymentVerified}
                 currentUser={currentUser}
                 setScreen={setScreen}
                 onClose={() => { setBuyNowItem(null); navigate(-1); }}
@@ -901,7 +947,6 @@ Message: ${details.message}`;
             <Route path="/contact" element={<ContactScreen onSubmitContact={handleContactSubmit} />} />
             <Route path="/about" element={<AboutScreen />} />
             <Route path="/our-story" element={<OurStoryScreen />} />
-            <Route path="/blog" element={<BlogScreen />} />
             
             <Route path="/privacy-policy" element={<PrivacyPolicyScreen setScreen={setScreen} />} />
             <Route path="/terms-conditions" element={<TermsConditionsScreen setScreen={setScreen} />} />
