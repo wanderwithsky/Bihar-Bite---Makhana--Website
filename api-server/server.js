@@ -14,10 +14,11 @@ app.use(cors({
     if (!origin || 
         origin === 'http://localhost:3000' || 
         origin === 'https://biharbitemakhana.com' ||
+        origin === 'https://www.biharbitemakhana.com' ||
         origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(null, false);
     }
   },
   credentials: true
