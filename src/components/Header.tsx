@@ -251,19 +251,19 @@ export default function Header({
                       }}
                       className={
                         link.label === 'WHOLESALE'
-                        ? `relative text-[11px] font-bold tracking-[0.15em] uppercase transition-colors px-3 py-1.5 rounded-md flex items-center gap-1.5 ${isNavActive(destPath) ? 'bg-[#143A2A] text-white' : 'bg-[#FDFCF8] text-[#143A2A] border border-[#143A2A]/20 hover:bg-[#143A2A] hover:text-white shadow-sm'}`
+                        ? `relative text-[11px] font-extrabold tracking-[0.15em] uppercase transition-all px-3.5 py-1.5 rounded-full flex items-center gap-1.5 ${isNavActive(destPath) ? 'bg-[#143A2A] text-white shadow-md' : 'bg-[#FAF8F4] text-[#143A2A] border border-[#7C8464]/30 hover:bg-[#143A2A] hover:text-white shadow-sm'}`
                         : `relative text-[11px] font-bold tracking-[0.15em] uppercase transition-colors py-1 ${
                         isNavActive(destPath) ? 'text-[#143A2A]' : 'text-[#4A4A3A] hover:text-[#143A2A]'
                       }`}
                     >
                       <span className="relative inline-block">
                         {link.label}
-                        {isNavActive(destPath) && (
+                        {isNavActive(destPath) && link.label !== 'WHOLESALE' && (
                           <motion.div layoutId="underline-desktop" className="absolute -bottom-1 left-0 right-0 h-[1.5px] bg-[#143A2A]" />
                         )}
                       </span>
                       {link.label === 'WHOLESALE' && (
-                        <span className={`text-[8px] px-1.5 py-0.5 rounded-sm tracking-wider ${isNavActive(destPath) ? 'bg-white/20' : 'bg-[#C28E63]/10 text-[#C28E63]'}`}>B2B</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full tracking-wider font-bold ${isNavActive(destPath) ? 'bg-white/20 text-white' : 'bg-[#143A2A]/10 text-[#143A2A]'}`}>B2B</span>
                       )}
                     </Link>
                   );

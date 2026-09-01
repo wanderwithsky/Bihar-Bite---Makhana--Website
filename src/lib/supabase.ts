@@ -628,24 +628,29 @@ function saveLocalInquiries(key: string, data: any[]) {
 }
 
 export async function submitContactMessage(message: {
-  fullName: string;
-  email: string;
-  phone?: string;
-  inquiryType?: string;
+  name: string;
+  phone_whatsapp: string;
+  business_name?: string;
+  city?: string;
+  requirement?: string;
+  quantity?: string;
   message: string;
-  subscribeNewsletter?: boolean;
 }) {
   const row = {
     id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
-    full_name: message.fullName,
-    email: message.email,
-    phone: message.phone || null,
-    inquiry_type: message.inquiryType || 'Retail Inquiry',
+    full_name: message.name,
+    email: 'no-email-provided@example.com', // Dummy email to satisfy NOT NULL constraint
+    phone: message.phone_whatsapp,
+    inquiry_type: message.requirement || 'General Inquiry',
     message: message.message,
-    subscribe_newsletter: message.subscribeNewsletter !== false,
+    subscribe_newsletter: false,
     status: 'Pending',
     admin_notes: '',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    business_name: message.business_name || null,
+    city: message.city || null,
+    requirement: message.requirement || null,
+    quantity: message.quantity || null
   };
 
   if (supabase && isSupabaseConfigured) {

@@ -4,77 +4,73 @@ import { Send, MessageSquare, ShieldCheck } from 'lucide-react';
 export interface ContactFormProps {
   onSubmitContact: (details: {
     name: string;
-    email: string;
-    phone?: string;
-    inquiryType?: string;
+    phone_whatsapp: string;
+    business_name?: string;
+    city?: string;
+    requirement?: string;
+    quantity?: string;
     message: string;
-    subscribeNewsletter?: boolean;
   }) => Promise<void> | void;
 }
 
 export default function ContactForm({ onSubmitContact }: ContactFormProps) {
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    phone: '',
-    inquiryType: 'Retail Inquiry',
+    phone_whatsapp: '',
+    business_name: '',
+    city: '',
+    requirement: '',
+    quantity: '',
     message: '',
-    subscribeNewsletter: true,
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submittedName, setSubmittedName] = useState('');
-  const [submittedInquiryType, setSubmittedInquiryType] = useState('');
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const validateForm = () => {
     setErrorMsg(null);
-
-    // Form validations
     if (!formData.name.trim()) {
-      setErrorMsg("Please enter your full name.");
-      return;
+      setErrorMsg("Please enter your name.");
+      return false;
     }
-    if (!formData.email.trim()) {
-      setErrorMsg("Please enter your email address.");
-      return;
-    }
-    // Simple email regex validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      setErrorMsg("Please enter a valid email address.");
-      return;
+    if (!formData.phone_whatsapp.trim()) {
+      setErrorMsg("Please enter your Phone / WhatsApp number.");
+      return false;
     }
     if (!formData.message.trim()) {
       setErrorMsg("Please enter your message.");
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
-      // Save name and type for the success screen
       setSubmittedName(formData.name);
-      setSubmittedInquiryType(formData.inquiryType);
-
       await onSubmitContact({
         name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        inquiryType: formData.inquiryType,
+        phone_whatsapp: formData.phone_whatsapp.trim(),
+        business_name: formData.business_name.trim(),
+        city: formData.city.trim(),
+        requirement: formData.requirement.trim(),
+        quantity: formData.quantity.trim(),
         message: formData.message.trim(),
-        subscribeNewsletter: formData.subscribeNewsletter,
       });
 
-      // Reset form after successful submission
       setFormData({
         name: '',
-        email: '',
-        phone: '',
-        inquiryType: 'Retail Inquiry',
+        phone_whatsapp: '',
+        business_name: '',
+        city: '',
+        requirement: '',
+        quantity: '',
         message: '',
-        subscribeNewsletter: true,
       });
       setIsSubmitted(true);
     } catch (err: any) {
@@ -85,9 +81,27 @@ export default function ContactForm({ onSubmitContact }: ContactFormProps) {
     }
   };
 
+  const handleWhatsApp = () => {
+    if (!validateForm()) return;
+    
+    const waText = `Hello Bihar Bite,
+
+Name: ${formData.name.trim()}
+Phone/WhatsApp: ${formData.phone_whatsapp.trim()}
+Business Name: ${formData.business_name.trim()}
+City: ${formData.city.trim()}
+Requirement: ${formData.requirement.trim()}
+Quantity: ${formData.quantity.trim()}
+Message: ${formData.message.trim()}
+
+I would like to enquire with Bihar Bite.`;
+
+    const encodedText = encodeURIComponent(waText);
+    window.open(`https://wa.me/917880454502?text=${encodedText}`, '_blank');
+  };
+
   return (
     <div className="bg-white rounded-[32px] p-8 md:p-10 border border-outline-variant/30 shadow-sm relative overflow-hidden w-full h-full">
-      {/* Abstract background shape */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-surface-container-low rounded-full -mr-10 -mt-10 opacity-50 pointer-events-none" />
 
       {isSubmitted ? (
@@ -98,7 +112,7 @@ export default function ContactForm({ onSubmitContact }: ContactFormProps) {
           <div className="space-y-2">
             <h3 className="font-serif text-2xl font-bold text-primary">Message Dispatched!</h3>
             <p className="text-sm text-on-surface-variant max-w-md mx-auto">
-              Thank you for reaching out, <span className="font-semibold">{submittedName}</span>. Your inquiry regarding <span className="italic text-secondary">{submittedInquiryType}</span> has been securely logged with our Madhubani hub.
+              Thank you for reaching out, <span className="font-semibold">{submittedName}</span>. Your inquiry has been securely logged with our team.
             </p>
           </div>
           <div className="pt-4">
@@ -127,10 +141,9 @@ export default function ContactForm({ onSubmitContact }: ContactFormProps) {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Full Name */}
             <div className="space-y-1.5">
               <label htmlFor="name" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
-                Full Name <span className="text-secondary">*</span>
+                Name <span className="text-secondary">*</span>
               </label>
               <input
                 type="text"
@@ -139,68 +152,80 @@ export default function ContactForm({ onSubmitContact }: ContactFormProps) {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary transition-all text-on-surface"
-                placeholder="e.g. Rohan Sharma"
               />
             </div>
-
-            {/* Email */}
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
-                Email Address <span className="text-secondary">*</span>
+              <label htmlFor="phone_whatsapp" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
+                Phone / WhatsApp <span className="text-secondary">*</span>
               </label>
               <input
-                type="email"
-                id="email"
+                type="tel"
+                id="phone_whatsapp"
                 required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                value={formData.phone_whatsapp}
+                onChange={(e) => setFormData({ ...formData, phone_whatsapp: e.target.value })}
                 className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary transition-all text-on-surface"
-                placeholder="e.g. rohan@example.com"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Phone */}
             <div className="space-y-1.5">
-              <label htmlFor="phone" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
-                Phone Number
+              <label htmlFor="business_name" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
+                Business Name
               </label>
               <input
-                type="tel"
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                type="text"
+                id="business_name"
+                value={formData.business_name}
+                onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
                 className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary transition-all text-on-surface"
-                placeholder="e.g. +91 98765 XXXXX"
               />
             </div>
-
-            {/* Inquiry Type */}
             <div className="space-y-1.5">
-              <label htmlFor="inquiryType" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
-                Nature of Inquiry
+              <label htmlFor="city" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
+                City
               </label>
-              <select
-                id="inquiryType"
-                value={formData.inquiryType}
-                onChange={(e) => setFormData({ ...formData, inquiryType: e.target.value })}
-                className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary transition-all text-on-surface cursor-pointer"
-              >
-                <option value="Retail Inquiry">Retail snacker question</option>
-                <option value="Feedback">Product feedback / Flavors</option>
-                <option value="Become a Distributor">Become a Distributor</option>
-                <option value="Corporate Hampers">Corporate Gifting</option>
-                <option value="Partnership">Boutique Partnership</option>
-                <option value="Heritage Sourcing">Farmer Collective inquiry</option>
-              </select>
+              <input
+                type="text"
+                id="city"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary transition-all text-on-surface"
+              />
             </div>
           </div>
 
-          {/* Message */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label htmlFor="requirement" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
+                Requirement
+              </label>
+              <input
+                type="text"
+                id="requirement"
+                value={formData.requirement}
+                onChange={(e) => setFormData({ ...formData, requirement: e.target.value })}
+                className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary transition-all text-on-surface"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="quantity" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
+                Quantity
+              </label>
+              <input
+                type="text"
+                id="quantity"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary transition-all text-on-surface"
+              />
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <label htmlFor="message" className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant/70">
-              Your Message <span className="text-secondary">*</span>
+              Message <span className="text-secondary">*</span>
             </label>
             <textarea
               id="message"
@@ -209,38 +234,31 @@ export default function ContactForm({ onSubmitContact }: ContactFormProps) {
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary transition-all text-on-surface resize-none"
-              placeholder="Tell us what's on your mind... we'd love to chat!"
             />
           </div>
 
-          {/* Newsletter Subscription */}
-          <div className="flex items-center gap-2.5 pt-1">
-            <input
-              type="checkbox"
-              id="subscribe"
-              checked={formData.subscribeNewsletter}
-              onChange={(e) => setFormData({ ...formData, subscribeNewsletter: e.target.checked })}
-              className="w-4 h-4 rounded border-outline-variant/30 text-primary focus:ring-primary/20 cursor-pointer"
-            />
-            <label htmlFor="subscribe" className="text-xs text-on-surface-variant select-none cursor-pointer">
-              Subscribe to Bihar Bite's culinary stories, harvests and exclusive offers.
-            </label>
+          <div className="space-y-3 pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-[#7C8464] hover:bg-[#6A7155] text-white py-3.5 rounded-xl text-xs font-semibold tracking-widest uppercase shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-75"
+            >
+              {isSubmitting ? (
+                <span className="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" /> Dispatch Correspondence
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleWhatsApp}
+              className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-3.5 rounded-xl text-xs font-semibold tracking-widest uppercase shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.99]"
+            >
+              <MessageSquare className="w-3.5 h-3.5" /> Send Enquiry on WhatsApp
+            </button>
           </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-[#7C8464] hover:bg-[#6A7155] text-white py-3.5 rounded-xl text-xs font-semibold tracking-widest uppercase shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-75"
-          >
-            {isSubmitting ? (
-              <span className="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-            ) : (
-              <>
-                <Send className="w-3.5 h-3.5" /> Dispatch Correspondence
-              </>
-            )}
-          </button>
         </form>
       )}
     </div>

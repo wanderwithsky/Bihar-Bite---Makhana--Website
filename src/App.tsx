@@ -622,31 +622,25 @@ Message: ${details.message}`;
 
   const handleContactSubmit = async (details: {
     name: string;
-    email: string;
-    phone?: string;
-    inquiryType?: string;
+    phone_whatsapp: string;
+    business_name?: string;
+    city?: string;
+    requirement?: string;
+    quantity?: string;
     message: string;
-    subscribeNewsletter?: boolean;
   }) => {
     // This must return the promise to propagate potential errors to ContactScreen
     await submitContactMessage({
-      fullName: details.name,
-      email: details.email,
-      phone: details.phone,
-      inquiryType: details.inquiryType,
-      message: details.message,
-      subscribeNewsletter: details.subscribeNewsletter
+      name: details.name,
+      phone_whatsapp: details.phone_whatsapp,
+      business_name: details.business_name,
+      city: details.city,
+      requirement: details.requirement,
+      quantity: details.quantity,
+      message: details.message
     });
 
     showToast(`Thank you, ${details.name}! Your message was securely logged.`, 'success');
-
-    if (details.subscribeNewsletter) {
-      try {
-        await submitNewsletterSubscriber(details.email);
-      } catch (newsletterErr) {
-        console.warn('Newsletter subscription during contact failed silently:', newsletterErr);
-      }
-    }
   };
 
   const handleSearchSubmit = () => {
@@ -894,6 +888,7 @@ Message: ${details.message}`;
                 isProductsLoading={isProductsLoading}
                 productsError={productsError}
                 onSubmitContact={handleContactSubmit}
+                onAddToCart={handleAddToCart}
               />
             } />
 

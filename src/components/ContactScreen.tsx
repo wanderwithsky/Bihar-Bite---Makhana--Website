@@ -5,11 +5,12 @@ import FAQSection from './FAQSection';
 interface ContactScreenProps {
   onSubmitContact: (details: {
     name: string;
-    email: string;
-    phone?: string;
-    inquiryType?: string;
+    phone_whatsapp: string;
+    business_name?: string;
+    city?: string;
+    requirement?: string;
+    quantity?: string;
     message: string;
-    subscribeNewsletter?: boolean;
   }) => Promise<void> | void;
 }
 

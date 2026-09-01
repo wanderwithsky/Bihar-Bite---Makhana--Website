@@ -41,56 +41,49 @@ export default function DetailsScreen({
   // Find product by slug from URL
   const product = products.find(p => p.slug === slug || (p as any).id === slug);
 
-  if (!product) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 bg-[#FDFDF9]">
-        <div className="w-24 h-24 mb-6 opacity-50">
-          <img src="/images/hero/03.png" alt="Makhana" className="w-full h-full object-contain filter grayscale" />
-        </div>
-        <h2 className="font-serif text-4xl text-[#143A2A] mb-4">Product Not Found</h2>
-        <p className="text-stone-500 mb-8 max-w-md text-center">We couldn't find the product you're looking for. It may have been removed or the link is incorrect.</p>
-        <Link 
-          to="/shop" 
-          className="bg-[#143A2A] text-[#FAF8F4] px-8 py-3 rounded-full font-sans font-bold uppercase tracking-widest text-[13px] hover:bg-[#0E281C] transition-all duration-300 shadow-md"
-        >
-          Return to Shop
-        </Link>
-      </div>
-    );
-  }
+
   
   // Gallery images from the new products.ts format
-  const galleryImages = [
+  const baseGalleryImages = product ? [
     ...((product as any).video ? [(product as any).video] : []),
     ...((product.images && product.images.length > 0) ? product.images : (product.image ? [product.image] : ['/images/hero/03.png']))
-  ];
+  ] : ['/images/hero/03.png'];
+
+  const NUTRITION_IMAGE = '/images/nutrition-info.png';
+  const PRODUCT_INFO_IMAGE = '/images/product-info.png';
+  
+  let galleryImages = [...baseGalleryImages];
+  if (!galleryImages.includes(NUTRITION_IMAGE)) galleryImages.push(NUTRITION_IMAGE);
+  if (!galleryImages.includes(PRODUCT_INFO_IMAGE)) galleryImages.push(PRODUCT_INFO_IMAGE);
 
   const [activeImage, setActiveImage] = useState<string>(galleryImages[0]);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
-  const [selectedWeight, setSelectedWeight] = useState<string>(product.weight || '100g');
+  const [selectedWeight, setSelectedWeight] = useState<string>(product?.weight || '100g');
   const [quantity, setQuantity] = useState<number>(1);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   
   // Reset state when product changes
   useEffect(() => {
-    setActiveImage(galleryImages[0]);
-    setActiveImageIndex(0);
-    setSelectedWeight((product as any).weights?.[0] || product.weight || '100g');
-    setQuantity(1);
+    if (product) {
+      setActiveImage(galleryImages[0]);
+      setActiveImageIndex(0);
+      setSelectedWeight((product as any).weights?.[0] || product.weight || '100g');
+      setQuantity(1);
+    }
   }, [product]);
 
   // Use local product structure
-  const activePrice = (product as any).weightPrices?.[selectedWeight] || product.price;
+  const activePrice = (product as any)?.weightPrices?.[selectedWeight] || product?.price || 0;
   const originalPrice = Math.round(activePrice * 1.15); // Adjust based on dynamic price
   const discountPercent = Math.round(((originalPrice - activePrice) / originalPrice) * 100);
-  const isSaved = wishlist.some((item) => item.id === (product as any).slug || item.id === (product as any).id);
+  const isSaved = wishlist.some((item) => item.id === (product as any)?.slug || item.id === (product as any)?.id);
 
   // Recommendations: 4 items excluding current
-  const relatedProducts = products.filter((p) => ((p as any).slug || p.id) !== ((product as any).slug || product.id)).slice(0, 4);
+  const relatedProducts = products.filter((p) => ((p as any).slug || p.id) !== ((product as any)?.slug || product?.id)).slice(0, 4);
   // Ensure we always have 4 if possible
   if (relatedProducts.length < 4 && products.length >= 4) {
-    const additional = products.filter(p => !relatedProducts.includes(p) && ((p as any).slug || p.id) !== ((product as any).slug || product.id));
+    const additional = products.filter(p => !relatedProducts.includes(p) && ((p as any).slug || p.id) !== ((product as any)?.slug || product?.id));
     relatedProducts.push(...additional.slice(0, 4 - relatedProducts.length));
   }
 
@@ -102,6 +95,7 @@ export default function DetailsScreen({
   ];
 
   const handleWhatsAppOrder = () => {
+    if (!product) return;
     const text = encodeURIComponent(`Hi Bihar Bite! I'd like to order ${quantity}x ${product.name} (${selectedWeight}).`);
     window.open(`https://wa.me/917985347849?text=${text}`, '_blank');
   };
@@ -110,11 +104,13 @@ export default function DetailsScreen({
   const decreaseQuantity = () => setQuantity(q => Math.max(1, q - 1));
 
   const handleAddToCart = () => {
+    if (!product) return;
     onAddToCart(product, selectedWeight, quantity);
     // Notification is handled globally in App.tsx by handleAddToCart
   };
 
   const handleBuyNow = (e?: React.MouseEvent) => {
+    if (!product) return;
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -131,7 +127,7 @@ export default function DetailsScreen({
   };
 
   const handleAmazonClick = () => {
-    const url = (product as any).amazonUrl;
+    const url = (product as any)?.amazonUrl;
     if (url) {
       window.open(url, '_blank');
     }
@@ -156,6 +152,24 @@ export default function DetailsScreen({
     if (isLightboxOpen) window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isLightboxOpen]);
+
+  if (!product) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 bg-[#FDFDF9]">
+        <div className="w-24 h-24 mb-6 opacity-50">
+          <img src="/images/hero/03.png" alt="Makhana" className="w-full h-full object-contain filter grayscale" />
+        </div>
+        <h2 className="font-serif text-4xl text-[#143A2A] mb-4">Product Not Found</h2>
+        <p className="text-stone-500 mb-8 max-w-md text-center">We couldn't find the product you're looking for. It may have been removed or the link is incorrect.</p>
+        <Link 
+          to="/shop" 
+          className="bg-[#143A2A] text-[#FAF8F4] px-8 py-3 rounded-full font-sans font-bold uppercase tracking-widest text-[13px] hover:bg-[#0E281C] transition-all duration-300 shadow-md"
+        >
+          Return to Shop
+        </Link>
+      </div>
+    );
+  }
 
   const handleBack = () => {
     if (window.history.length > 2) {
@@ -226,8 +240,8 @@ export default function DetailsScreen({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.4 }}
                     src={activeImage}
-                    alt={product.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    alt={activeImage === '/images/nutrition-info.png' ? "Nutritional Information for Bihar Bite Makhana" : activeImage === '/images/product-info.png' ? "Ingredients, Storage, Shelf Life and Allergen Information for Bihar Bite Makhana" : product.name}
+                    className={`absolute inset-0 w-full h-full transition-transform duration-700 ease-out group-hover:scale-105 ${activeImage === '/images/nutrition-info.png' || activeImage === '/images/product-info.png' ? 'object-contain p-4' : 'object-cover'}`}
                   />
                 )}
               </AnimatePresence>
@@ -248,7 +262,11 @@ export default function DetailsScreen({
                   {img?.endsWith('.mp4') || img?.endsWith('.webm') || img?.endsWith('.mov') ? (
                     <video src={img} className="w-full h-full object-cover" muted playsInline />
                   ) : (
-                    <img src={img} className="w-full h-full object-cover" alt="thumbnail" />
+                    <img 
+                      src={img} 
+                      className={`w-full h-full ${img === '/images/nutrition-info.png' || img === '/images/product-info.png' ? 'object-contain p-1' : 'object-cover'}`} 
+                      alt={img === '/images/nutrition-info.png' ? "Nutritional Information for Bihar Bite Makhana" : img === '/images/product-info.png' ? "Ingredients, Storage, Shelf Life and Allergen Information for Bihar Bite Makhana" : `Thumbnail ${idx + 1}`} 
+                    />
                   )}
                 </button>
               ))}

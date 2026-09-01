@@ -150,6 +150,9 @@ export default function AdminInquiriesTab({ showToast }: AdminInquiriesTabProps)
                       <>
                         <div className="flex justify-between"><span className="text-on-surface-variant/60">Nature:</span><span className="font-bold text-primary">{item.inquiry_type || 'Retail Inquiry'}</span></div>
                         {item.phone && <div className="flex justify-between"><span className="text-on-surface-variant/60">Phone:</span><span className="font-mono font-bold text-primary">{item.phone}</span></div>}
+                        {item.business_name && <div className="flex justify-between"><span className="text-on-surface-variant/60">Business:</span><span className="font-bold text-primary truncate max-w-[120px]">{item.business_name}</span></div>}
+                        {item.city && <div className="flex justify-between"><span className="text-on-surface-variant/60">City:</span><span className="font-bold text-primary">{item.city}</span></div>}
+                        {item.quantity && <div className="flex justify-between"><span className="text-on-surface-variant/60">Quantity:</span><span className="font-bold text-primary">{item.quantity}</span></div>}
                         <div className="flex justify-between"><span className="text-on-surface-variant/60">Newsletter Sub:</span><span className={`font-bold ${item.subscribe_newsletter ? 'text-green-700' : 'text-red-700'}`}>{item.subscribe_newsletter ? 'Accepted' : 'No'}</span></div>
                       </>
                     )}

@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { Mail, Phone, Globe, ShieldCheck, Award, MessageSquare, Send } from 'lucide-react';
 import { countries } from '../data';
+import WholesaleEnquiryPopup from './WholesaleEnquiryPopup';
 
 interface BulkScreenProps {
   onSubmitInquiry: (details: {
@@ -88,18 +89,40 @@ export default function BulkScreen({ onSubmitInquiry }: BulkScreenProps) {
 
   return (
     <div id="hero" className="max-w-7xl mx-auto px-6 pt-[140px] sm:pt-[148px] md:pt-[152px] pb-20 font-sans">
+      <WholesaleEnquiryPopup />
       
       {/* Page Header */}
-      <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+      <div className="text-center max-w-4xl mx-auto mb-12 space-y-4">
         <span className="text-xs font-bold uppercase tracking-widest text-secondary block">
           Global B2B Wholesale & Exports
         </span>
         <h1 className="font-serif text-3xl md:text-5xl font-bold text-primary leading-tight">
-          Sourcing the World's Best Makhana directly from Ponds
+          Bulk & Wholesale Makhana from Bihar
         </h1>
-        <p className="text-sm md:text-base text-on-surface-variant leading-relaxed">
-          Bihar Bite is a certified global exporter of graded phool makhana. Sourced from the mineral-dense wetlands of Mithila, Bihar, we process raw & roasted fox nuts with international food-grade hygiene standards.
+        <p className="text-sm md:text-base text-on-surface-variant leading-relaxed max-w-2xl mx-auto">
+          Bihar Bite supports wholesale and bulk Makhana requirements across India. We deliver premium quality directly to your business.
         </p>
+      </div>
+
+      {/* Permanent Wholesale Benefits */}
+      <div className="max-w-5xl mx-auto mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[
+            "Multiple grades",
+            "Bulk quantities",
+            "Retail & wholesale supply",
+            "Custom packing",
+            "Pan-India dispatch",
+            "Business enquiries"
+          ].map((benefit, idx) => (
+            <div key={idx} className="flex items-center gap-3 bg-white border border-outline-variant/30 rounded-xl p-4 shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-primary/5 text-primary flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <span className="text-sm font-semibold text-on-surface">{benefit}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-16">
@@ -304,7 +327,7 @@ export default function BulkScreen({ onSubmitInquiry }: BulkScreenProps) {
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    Submit Wholesale Request
+                    GET WHOLESALE QUOTE
                   </>
                 )}
               </button>

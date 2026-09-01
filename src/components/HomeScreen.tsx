@@ -1,4 +1,4 @@
-import { ArrowRight, Star, Award, ShieldCheck, Truck, RotateCcw, CheckSquare, HeartHandshake, Leaf, Globe, CheckCircle2, ChevronRight, MapPin } from 'lucide-react';
+import { ArrowRight, Star, Award, ShieldCheck, Truck, RotateCcw, CheckSquare, HeartHandshake, Leaf, Globe, CheckCircle2, ChevronRight, MapPin, ShoppingBag } from 'lucide-react';
 import ContactForm from './ContactForm';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -19,12 +19,14 @@ interface HomeScreenProps {
   productsError?: string | null;
   onSubmitContact: (details: {
     name: string;
-    email: string;
-    phone?: string;
-    inquiryType?: string;
+    phone_whatsapp: string;
+    business_name?: string;
+    city?: string;
+    requirement?: string;
+    quantity?: string;
     message: string;
-    subscribeNewsletter?: boolean;
   }) => Promise<void> | void;
+  onAddToCart?: (product: Product, selectedWeight: string, quantity?: number) => void;
 }
 
 function SocialReelCard({ reel, idx, onClick }: { reel: any; idx: number; onClick: () => void }) {
@@ -128,7 +130,8 @@ export default function HomeScreen({
   products,
   isProductsLoading,
   productsError,
-  onSubmitContact
+  onSubmitContact,
+  onAddToCart
 }: HomeScreenProps) {
   const navigate = useNavigate();
   const [activeReel, setActiveReel] = useState<{video: string} | null>(null);
@@ -555,19 +558,26 @@ export default function HomeScreen({
                         <span className="font-sans font-bold text-[#143A2A] text-[22px]">{prod.priceDisplay || `₹${prod.price}`}</span>
                       </div>
                       
-                      {/* Add to Cart Button (hover state) */}
-                      <div className="absolute left-0 flex items-center opacity-0 translate-y-2 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0">
+                      {/* Action Buttons (hover state) */}
+                      <div className="absolute inset-0 flex flex-row items-center justify-between gap-2 opacity-0 translate-y-2 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 z-10 w-full">
                         <button 
-                          className="bg-[#143A2A] text-[#FDFCF8] text-[11px] font-bold tracking-[0.15em] px-5 py-2.5 rounded-full uppercase shadow-md hover:bg-[#0E281C] transition-colors"
+                          className="flex-1 flex justify-center items-center bg-[#143A2A] text-[#FDFCF8] text-[9.5px] sm:text-[10px] xl:text-[11px] font-bold tracking-[0.1em] px-1 sm:px-2 py-2.5 rounded-full uppercase shadow-md hover:bg-[#0E281C] transition-colors whitespace-nowrap overflow-hidden"
                           onClick={(e) => { e.stopPropagation(); navigate(`/product/${prod.id}`); }}
                         >
                           VIEW DETAILS
                         </button>
-                      </div>
-                      
-                      {/* Weight (always visible on right) */}
-                      <div className="absolute right-0 flex items-center h-full">
-                        <span className="font-sans font-bold text-[#8C7D5F] text-[12px] uppercase tracking-[0.1em]">{prod.weight || '100g'}</span>
+                        
+                        <button 
+                          className="flex-1 flex justify-center items-center bg-gradient-to-r from-[#C28E63] to-[#b37a4e] text-white text-[10px] xl:text-[11px] font-bold tracking-[0.05em] px-2 py-2.5 rounded-full shadow-sm hover:shadow-md hover:from-[#b37a4e] hover:to-[#9e6338] transition-all duration-300 active:scale-95 gap-1 sm:gap-1.5 whitespace-nowrap overflow-hidden"
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (onAddToCart) onAddToCart(prod, prod.weight || '100g', 1);
+                          }}
+                          aria-label={`Add ${prod.name} to cart`}
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5 shrink-0 hidden sm:block" />
+                          <span>Add to Cart</span>
+                        </button>
                       </div>
                     </div>
 

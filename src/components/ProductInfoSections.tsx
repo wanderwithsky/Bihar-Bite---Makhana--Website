@@ -8,73 +8,9 @@ interface ProductInfoSectionsProps {
 }
 
 export default function ProductInfoSections({ product }: ProductInfoSectionsProps) {
-  const [openId, setOpenId] = useState<string | null>('ingredients');
+  const [openId, setOpenId] = useState<string | null>('shipping');
 
   const sections = [
-    {
-      id: 'ingredients',
-      title: 'Ingredients',
-      content: <p className="text-[14px]">Makhana (Fox Nuts / Gorgon Nuts) – 100%</p>
-    },
-    {
-      id: 'nutrition',
-      title: 'Nutritional Information (Approx. per 100 g)',
-      content: (
-        <div className="overflow-x-auto w-full custom-scrollbar">
-          <table className="w-full text-[14px] text-left border-collapse min-w-[300px]">
-            <tbody>
-              <tr className="border-b border-stone-100">
-                <td className="py-3 pr-4 font-semibold text-stone-800 w-1/2">Energy</td>
-                <td className="py-3 text-stone-600">350 kcal</td>
-              </tr>
-              <tr className="border-b border-stone-100">
-                <td className="py-3 pr-4 font-semibold text-stone-800">Protein</td>
-                <td className="py-3 text-stone-600">9.7 g</td>
-              </tr>
-              <tr className="border-b border-stone-100">
-                <td className="py-3 pr-4 font-semibold text-stone-800">Total Fat</td>
-                <td className="py-3 text-stone-600">0.1 g</td>
-              </tr>
-              <tr className="border-b border-stone-100">
-                <td className="py-3 pr-4 font-semibold text-stone-800">Carbohydrate</td>
-                <td className="py-3 text-stone-600">77.0 g</td>
-              </tr>
-              <tr className="border-b border-stone-100">
-                <td className="py-3 pr-4 font-semibold text-stone-800">Total Dietary Fibre</td>
-                <td className="py-3 text-stone-600">14.5 g</td>
-              </tr>
-              <tr className="border-b border-stone-100">
-                <td className="py-3 pr-4 font-semibold text-stone-800">Total Sugars</td>
-                <td className="py-3 text-stone-600">0 g</td>
-              </tr>
-              <tr className="border-b border-stone-100">
-                <td className="py-3 pr-4 font-semibold text-stone-800">Added Sugars</td>
-                <td className="py-3 text-stone-600">0 g</td>
-              </tr>
-              <tr>
-                <td className="py-3 pr-4 font-semibold text-stone-800">Sodium</td>
-                <td className="py-3 text-stone-600">5 mg</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )
-    },
-    {
-      id: 'storage',
-      title: 'Storage Instructions',
-      content: <p className="text-[14px]">Store in a cool, dry and hygienic place. Keep away from direct sunlight and moisture. After opening, keep the pack tightly sealed in an airtight container.</p>
-    },
-    {
-      id: 'shelf-life',
-      title: 'Shelf Life',
-      content: <p className="text-[14px]">Best before 12 months from the date of packaging, subject to proper storage.</p>
-    },
-    {
-      id: 'allergen',
-      title: 'Allergen Information',
-      content: <p className="text-[14px]">Contains Makhana (Fox Nuts). No other ingredients added.</p>
-    },
     {
       id: 'shipping',
       title: 'Shipping Information',
