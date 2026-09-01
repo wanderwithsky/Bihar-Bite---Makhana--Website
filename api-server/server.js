@@ -9,15 +9,21 @@ dotenv.config();
 
 const app = express();
 
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://biharbitemakhana.com',
+  'https://www.biharbitemakhana.com'
+];
+
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || 
-        origin === 'http://localhost:3000' || 
-        origin === 'https://biharbitemakhana.com' ||
-        origin === 'https://www.biharbitemakhana.com' ||
-        origin.endsWith('.vercel.app')) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
+      // Return false to gracefully block the request without throwing a 500
       callback(null, false);
     }
   },
