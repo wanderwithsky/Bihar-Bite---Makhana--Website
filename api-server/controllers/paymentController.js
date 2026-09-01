@@ -8,7 +8,14 @@ dotenv.config();
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+let supabase = null;
+try {
+  if (supabaseUrl && supabaseServiceKey) {
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
+  }
+} catch (error) {
+  console.error('[SUPABASE_INIT_ERROR] Failed to initialize Supabase:', error.message);
+}
 
 export const createOrder = async (req, res) => {
   try {
@@ -18,17 +25,29 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ error: 'Missing order ID' });
     }
 
+    if (!razorpay) {
+      return res.status(500).json({ error: 'Razorpay is not configured on the server. Check RAZORPAY_KEY_ID.' });
+    }
+
     console.log('[RAZORPAY] using Supabase URL:', supabaseUrl.substring(0, 20) + '...');
     console.log('[RAZORPAY] querying order ID:', app_order_id);
 
     let finalAmountRupees = clientAmount; // Fallback
 
-    // Securely fetch the order total from the server-side database where possible
-    const { data: dbOrder, error: orderError } = await supabase
-      .from('orders')
-      .select('total')
-      .eq('id', app_order_id)
-      .single();
+    let dbOrder = null;
+    let orderError = null;
+
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('total')
+        .eq('id', app_order_id)
+        .single();
+      dbOrder = data;
+      orderError = error;
+    } else {
+      console.log('[SUPABASE_ERROR] Supabase client not initialized, skipping DB order lookup.');
+    }
 
     if (orderError || !dbOrder) {
       console.log('[RAZORPAY] could not fetch from DB (RLS or missing), trusting client amount:', finalAmountRupees);
@@ -55,11 +74,14 @@ export const createOrder = async (req, res) => {
     const razorpayOrder = await razorpay.orders.create(options);
     console.log('[RAZORPAY] order created:', razorpayOrder.id);
 
-    // Securely update the Supabase order with the Razorpay Order ID where possible
-    const { error: updateError } = await supabase
-      .from('orders')
-      .update({ razorpay_order_id: razorpayOrder.id })
-      .eq('id', app_order_id);
+    let updateError = null;
+    if (supabase) {
+      const { error } = await supabase
+        .from('orders')
+        .update({ razorpay_order_id: razorpayOrder.id })
+        .eq('id', app_order_id);
+      updateError = error;
+    }
 
     if (updateError) {
       console.log('[RAZORPAY] note: could not update razorpay_order_id in DB (RLS restricted or column missing). Will verify upon payment completion.', updateError.message);
@@ -95,16 +117,22 @@ export const verifyPayment = async (req, res) => {
     const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
-      // Payment is successful, update status in Supabase DB
-      const { error: dbError } = await supabase
-        .from('orders')
-        .update({ 
-          payment_status: 'Paid',
-          payment_method: 'online',
-          razorpay_order_id,
-          razorpay_payment_id
-        })
-        .eq('id', app_order_id);
+      let dbError = null;
+      if (supabase) {
+        const { error } = await supabase
+          .from('orders')
+          .update({ 
+            payment_status: 'Paid',
+            payment_method: 'online',
+            razorpay_order_id,
+            razorpay_payment_id
+          })
+          .eq('id', app_order_id);
+        dbError = error;
+      } else {
+        console.log('[SUPABASE_ERROR] Supabase client not initialized, skipping DB update.');
+        return res.status(500).json({ success: false, error: 'Database update failed (Supabase missing)' });
+      }
 
       if (dbError) {
         console.error('Failed to update Supabase order:', dbError);
