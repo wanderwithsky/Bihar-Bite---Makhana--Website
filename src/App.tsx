@@ -6,6 +6,7 @@ import HomeScreen from './components/HomeScreen';
 import ShopScreen from './components/ShopScreen';
 import DetailsScreen from './components/DetailsScreen';
 import BulkScreen from './components/BulkScreen';
+import PrivateLabelScreen from './components/PrivateLabelScreen';
 import ContactScreen from './components/ContactScreen';
 import AboutScreen from './components/AboutScreen';
 import OurStoryScreen from './components/OurStoryScreen';
@@ -939,6 +940,7 @@ Message: ${details.message}`;
             } />
 
             <Route path="/bulk" element={<BulkScreen onSubmitInquiry={handleInquirySubmit} />} />
+            <Route path="/private-label" element={<PrivateLabelScreen />} />
             <Route path="/contact" element={<ContactScreen onSubmitContact={handleContactSubmit} />} />
             <Route path="/about" element={<AboutScreen />} />
             <Route path="/our-story" element={<OurStoryScreen />} />

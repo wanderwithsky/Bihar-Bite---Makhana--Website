@@ -1,6 +1,6 @@
 import { useState, KeyboardEvent, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Heart, ShoppingBag, X, UserCircle, ShieldAlert, Phone, Mail, MapPin, Menu, Star } from 'lucide-react';
+import { Search, Heart, ShoppingBag, X, UserCircle, ShieldAlert, Phone, Mail, MapPin, Menu, Star, ChevronRight, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent, useSpring } from 'motion/react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { CartItem, Product, ScreenType, User } from '../types';
@@ -46,9 +46,10 @@ export default function Header({
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isWholesaleExpanded, setIsWholesaleExpanded] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [activeReviewIndex, setActiveReviewIndex] = useState(0);
+  const [activeAnnouncementIndex, setActiveAnnouncementIndex] = useState(0);
 
   const { scrollY, scrollYProgress } = useScroll();
   const [isNavVisible, setIsNavVisible] = useState(true);
@@ -84,18 +85,18 @@ export default function Header({
     }
   });
 
-  const topReviews = [
-    { text: "The freshest makhana we've ever tasted. Bihar Bite has become our family's favourite healthy snack.", name: "Rakesh Sharma" },
-    { text: "Premium packaging, amazing crunch and authentic taste. Bihar Bite truly stands out from every other brand.", name: "Neha Gupta" },
-    { text: "I ordered once just to try it. Now Bihar Bite is part of my monthly grocery list.", name: "Aman Verma" },
-    { text: "Excellent quality, fast delivery and perfectly roasted makhana. Highly recommended.", name: "Priya Singh" }
+  const topAnnouncements = [
+    "Direct From Bihar",
+    "Multiple Grades",
+    "Bulk Supply",
+    "Pan-India Delivery"
   ];
 
   useEffect(() => {
-    if (!hasScrolled && topReviews.length > 0) {
+    if (!hasScrolled && topAnnouncements.length > 0) {
       const interval = setInterval(() => {
-        setActiveReviewIndex((prev) => (prev + 1) % topReviews.length);
-      }, 5000);
+        setActiveAnnouncementIndex((prev) => (prev + 1) % topAnnouncements.length);
+      }, 2500);
       return () => clearInterval(interval);
     }
   }, [hasScrolled]);
@@ -152,8 +153,8 @@ export default function Header({
 
   const navLinks = [
     { label: 'HOME', path: '/' },
-    { label: 'SHOP', path: '/products' },
     { label: 'WHOLESALE', path: '/bulk' },
+    { label: 'SHOP', path: '/products' },
     { label: 'ABOUT', path: '/about' },
     { label: 'CONTACT', path: '/contact' },
   ];
@@ -161,7 +162,7 @@ export default function Header({
   const isNavActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     if (path === '/products') return location.pathname === '/products' || location.pathname.startsWith('/product/');
-    if (path === '/bulk') return location.pathname.startsWith('/bulk');
+    if (path === '/bulk') return location.pathname.startsWith('/bulk') || location.pathname.startsWith('/private-label');
     if (path === '/about') return location.pathname === '/about';
     if (path === '/contact') return location.pathname === '/contact';
     return location.pathname === path;
@@ -171,34 +172,29 @@ export default function Header({
 
   return (
     <>
-      {/* Top Customer Review Ticker */}
+      {/* Top Brand Announcement Ticker */}
       <AnimatePresence>
-        {!hasScrolled && topReviews.length > 0 && (
+        {!hasScrolled && topAnnouncements.length > 0 && (
           <motion.div 
             initial={{ y: '-100%', opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '-100%', opacity: 0 }}
-            className="fixed top-0 w-full z-40 bg-[#55613A] h-[34px] md:h-[42px] flex items-center justify-center overflow-hidden"
+            className="fixed top-0 w-full z-40 bg-[#1A4533] h-[34px] md:h-[42px] flex items-center justify-center overflow-hidden"
           >
             <AnimatePresence>
-              {topReviews[activeReviewIndex % topReviews.length] && (
+              {topAnnouncements[activeAnnouncementIndex % topAnnouncements.length] && (
                 <motion.div
-                  key={activeReviewIndex}
-                  initial={{ x: 40, opacity: 0 }}
+                  key={activeAnnouncementIndex}
+                  initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: -40, opacity: 0 }}
-                  transition={{ duration: 0.7, ease: "easeInOut" }}
-                  className="absolute w-full px-4 flex items-center justify-center gap-1.5 md:gap-2 text-white font-sans font-medium text-[12px]"
+                  exit={{ x: 20, opacity: 0 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className="absolute w-full px-4 flex items-center justify-center gap-2 text-[#FDFBF7] font-sans font-medium text-[12px] md:text-[13px] tracking-widest uppercase italic"
                 >
-                  <div className="flex gap-[2px] shrink-0">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-[14px] h-[14px] fill-[#D4A24A] text-[#D4A24A]" />
-                    ))}
-                  </div>
-                  <span className="truncate max-w-[50vw] sm:max-w-none tracking-wide">
-                    "{topReviews[activeReviewIndex % topReviews.length].text}"
+                  <span className="opacity-60 not-italic">•</span>
+                  <span className="truncate max-w-[80vw] sm:max-w-none">
+                    {topAnnouncements[activeAnnouncementIndex % topAnnouncements.length]}
                   </span>
-                  <span className="shrink-0 opacity-80 md:ml-1">— {topReviews[activeReviewIndex % topReviews.length].name}</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -233,39 +229,55 @@ export default function Header({
                   if (link.label === 'PROCESS') destPath = '/#process';
                   
                   return (
-                    <Link
-                      key={link.label}
-                      to={destPath}
-                      onClick={(e) => {
-                        if (destPath.startsWith('/#')) {
-                          e.preventDefault();
-                          navigate('/');
-                          setTimeout(() => {
-                            const id = destPath.split('#')[1];
-                            const el = document.getElementById(id);
-                            if (el) el.scrollIntoView({ behavior: 'smooth' });
-                          }, 100);
-                        } else {
-                          window.scrollTo(0,0);
-                        }
-                      }}
-                      className={
-                        link.label === 'WHOLESALE'
-                        ? `relative text-[11px] font-extrabold tracking-[0.15em] uppercase transition-all px-3.5 py-1.5 rounded-full flex items-center gap-1.5 ${isNavActive(destPath) ? 'bg-[#143A2A] text-white shadow-md' : 'bg-[#FAF8F4] text-[#143A2A] border border-[#7C8464]/30 hover:bg-[#143A2A] hover:text-white shadow-sm'}`
-                        : `relative text-[11px] font-bold tracking-[0.15em] uppercase transition-colors py-1 ${
-                        isNavActive(destPath) ? 'text-[#143A2A]' : 'text-[#4A4A3A] hover:text-[#143A2A]'
-                      }`}
-                    >
-                      <span className="relative inline-block">
-                        {link.label}
-                        {isNavActive(destPath) && link.label !== 'WHOLESALE' && (
-                          <motion.div layoutId="underline-desktop" className="absolute -bottom-1 left-0 right-0 h-[1.5px] bg-[#143A2A]" />
+                    <div key={link.label} className={link.label === 'WHOLESALE' ? 'group/nav relative' : ''}>
+                      <Link
+                        to={destPath}
+                        onClick={(e) => {
+                          if (destPath.startsWith('/#')) {
+                            e.preventDefault();
+                            navigate('/');
+                            setTimeout(() => {
+                              const id = destPath.split('#')[1];
+                              const el = document.getElementById(id);
+                              if (el) el.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
+                          } else {
+                            window.scrollTo(0,0);
+                          }
+                        }}
+                        className={
+                          link.label === 'WHOLESALE'
+                          ? `relative text-[11px] font-extrabold tracking-[0.15em] uppercase transition-all px-3.5 py-1.5 rounded-full flex items-center gap-1.5 ${isNavActive(destPath) ? 'bg-[#143A2A] text-white shadow-md' : 'bg-[#FAF8F4] text-[#143A2A] border border-[#7C8464]/30 hover:bg-[#143A2A] hover:text-white shadow-sm'}`
+                          : `relative text-[11px] font-bold tracking-[0.15em] uppercase transition-colors py-1 ${
+                          isNavActive(destPath) ? 'text-[#143A2A]' : 'text-[#4A4A3A] hover:text-[#143A2A]'
+                        }`}
+                      >
+                        <span className="relative inline-block">
+                          {link.label}
+                          {isNavActive(destPath) && link.label !== 'WHOLESALE' && (
+                            <motion.div layoutId="underline-desktop" className="absolute -bottom-1 left-0 right-0 h-[1.5px] bg-[#143A2A]" />
+                          )}
+                        </span>
+                        {link.label === 'WHOLESALE' && (
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full tracking-wider font-bold ${isNavActive(destPath) ? 'bg-white/20 text-white' : 'bg-[#143A2A]/10 text-[#143A2A]'}`}>B2B</span>
                         )}
-                      </span>
+                      </Link>
                       {link.label === 'WHOLESALE' && (
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full tracking-wider font-bold ${isNavActive(destPath) ? 'bg-white/20 text-white' : 'bg-[#143A2A]/10 text-[#143A2A]'}`}>B2B</span>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 translate-y-2 pointer-events-none group-hover/nav:opacity-100 group-hover/nav:translate-y-0 group-hover/nav:pointer-events-auto transition-all duration-300">
+                          <div className="w-[320px] bg-[#FAF8F4] rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-[#EBE6DA] p-2 flex flex-col gap-1 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#143A2A] to-[#C28E63]" />
+                            <Link to="/bulk" onClick={() => window.scrollTo(0,0)} className="group/item flex flex-col p-3 rounded-xl hover:bg-white transition-colors cursor-pointer text-left">
+                              <span className="font-sans font-bold text-[#143A2A] text-[14px] flex items-center justify-between">Bulk Supply <ChevronRight className="w-3.5 h-3.5 text-[#C28E63] opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all" /></span>
+                              <span className="font-sans text-[12px] text-[#7C8464] mt-1 leading-relaxed">Large-volume Makhana supply with multiple grades and packing options.</span>
+                            </Link>
+                            <Link to="/private-label" onClick={() => window.scrollTo(0,0)} className="group/item flex flex-col p-3 rounded-xl hover:bg-white transition-colors cursor-pointer text-left">
+                              <span className="font-sans font-bold text-[#143A2A] text-[14px] flex items-center justify-between">Private Label <ChevronRight className="w-3.5 h-3.5 text-[#C28E63] opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all" /></span>
+                              <span className="font-sans text-[12px] text-[#7C8464] mt-1 leading-relaxed">Custom packing and private-label Makhana supply for business requirements.</span>
+                            </Link>
+                          </div>
+                        </div>
                       )}
-                    </Link>
+                    </div>
                   );
                 })}
               </nav>
@@ -445,15 +457,15 @@ export default function Header({
             }}
             exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.25 } }}
             transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1.0] }}
-            className={`fixed z-50 flex transition-all duration-[250ms] ease-in-out left-4 top-[48px] md:left-0 md:right-0 md:justify-center ${hasScrolled ? 'md:top-6 -translate-y-4 opacity-0 pointer-events-none md:translate-y-0 md:opacity-100 md:pointer-events-auto' : 'md:top-14 translate-y-0 opacity-100 pointer-events-auto'}`}
+            className={`fixed z-[9999] flex transition-all duration-[250ms] ease-in-out left-4 top-[48px] md:left-0 md:right-0 md:justify-center ${hasScrolled ? 'md:top-6 -translate-y-4 opacity-0 pointer-events-none md:translate-y-0 md:opacity-100 md:pointer-events-auto' : 'md:top-14 translate-y-0 opacity-100 pointer-events-auto'}`}
           >
-            <motion.div
-          layout
-          data-expanded={isExpanded}
-          className="pointer-events-auto bg-white/80 backdrop-blur-xl border border-stone-200/60 shadow-xl overflow-hidden flex items-center justify-center relative"
-          style={{
-            borderRadius: isExpanded ? '32px' : '50px',
-          }}
+          <motion.div
+            layout
+            data-expanded={isExpanded}
+            className="pointer-events-auto bg-white/80 backdrop-blur-xl border border-stone-200/60 shadow-xl overflow-visible flex items-center justify-center relative"
+            style={{
+              borderRadius: isExpanded ? '32px' : '50px',
+            }}
           initial={{ width: 56, height: 56 }}
           animate={{
             width: isExpanded ? 'auto' : 56,
@@ -504,31 +516,47 @@ export default function Header({
                 {/* Nav Links */}
                 <div className="hidden lg:flex items-center gap-6">
                   {navLinks.map((link, i) => (
-                    <motion.button
-                      key={link.label}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 + 0.1 }}
-                      onClick={() => handleNavClick(link.path)}
-                      className={
-                        link.label === 'WHOLESALE'
-                        ? `relative text-[10px] tracking-[0.2em] font-bold uppercase transition-colors px-3 py-1.5 rounded-full flex items-center gap-1.5 ${
-                            isNavActive(link.path) ? 'bg-[#143A2A] text-white' : 'bg-[#E8E2D9] text-[#143A2A] hover:bg-[#143A2A] hover:text-white border border-[#C28E63]/30'
-                          }`
-                        : `relative text-[10px] tracking-[0.2em] font-bold uppercase transition-colors py-1 ${
-                        isNavActive(link.path) ? 'text-[#143A2A]' : 'text-[#4A4A3A] hover:text-[#143A2A]'
-                      }`}
-                    >
-                      <span className="relative inline-block">
-                        {link.label}
-                        {isNavActive(link.path) && (
-                          <motion.div layoutId="underline-floating" className="absolute -bottom-1 left-0 right-0 h-[1.5px] bg-[#143A2A]" />
+                    <div key={link.label} className={link.label === 'WHOLESALE' ? 'group/nav relative' : ''}>
+                      <motion.button
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 + 0.1 }}
+                        onClick={() => handleNavClick(link.path)}
+                        className={
+                          link.label === 'WHOLESALE'
+                          ? `relative text-[10px] tracking-[0.2em] font-bold uppercase transition-colors px-3 py-1.5 rounded-full flex items-center gap-1.5 ${
+                              isNavActive(link.path) ? 'bg-[#143A2A] text-white' : 'bg-[#E8E2D9] text-[#143A2A] hover:bg-[#143A2A] hover:text-white border border-[#C28E63]/30'
+                            }`
+                          : `relative text-[10px] tracking-[0.2em] font-bold uppercase transition-colors py-1 ${
+                          isNavActive(link.path) ? 'text-[#143A2A]' : 'text-[#4A4A3A] hover:text-[#143A2A]'
+                        }`}
+                      >
+                        <span className="relative inline-block">
+                          {link.label}
+                          {isNavActive(link.path) && link.label !== 'WHOLESALE' && (
+                            <motion.div layoutId="underline-floating" className="absolute -bottom-1 left-0 right-0 h-[1.5px] bg-[#143A2A]" />
+                          )}
+                        </span>
+                        {link.label === 'WHOLESALE' && (
+                          <span className={`text-[8px] px-1.5 py-0.5 rounded-full tracking-wider ${isNavActive(link.path) ? 'bg-white/20' : 'bg-[#143A2A]/10'}`}>B2B</span>
                         )}
-                      </span>
+                      </motion.button>
                       {link.label === 'WHOLESALE' && (
-                        <span className={`text-[8px] px-1.5 py-0.5 rounded-full tracking-wider ${isNavActive(link.path) ? 'bg-white/20' : 'bg-[#143A2A]/10'}`}>B2B</span>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 translate-y-2 pointer-events-none group-hover/nav:opacity-100 group-hover/nav:translate-y-0 group-hover/nav:pointer-events-auto transition-all duration-300">
+                          <div className="w-[320px] bg-[#FAF8F4] rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-[#EBE6DA] p-2 flex flex-col gap-1 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#143A2A] to-[#C28E63]" />
+                            <Link to="/bulk" onClick={() => { setIsExpanded(false); window.scrollTo(0,0); }} className="group/item flex flex-col p-3 rounded-xl hover:bg-white transition-colors cursor-pointer text-left">
+                              <span className="font-sans font-bold text-[#143A2A] text-[14px] flex items-center justify-between">Bulk Supply <ChevronRight className="w-3.5 h-3.5 text-[#C28E63] opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all" /></span>
+                              <span className="font-sans text-[12px] text-[#7C8464] mt-1 leading-relaxed">Large-volume Makhana supply with multiple grades and packing options.</span>
+                            </Link>
+                            <Link to="/private-label" onClick={() => { setIsExpanded(false); window.scrollTo(0,0); }} className="group/item flex flex-col p-3 rounded-xl hover:bg-white transition-colors cursor-pointer text-left">
+                              <span className="font-sans font-bold text-[#143A2A] text-[14px] flex items-center justify-between">Private Label <ChevronRight className="w-3.5 h-3.5 text-[#C28E63] opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all" /></span>
+                              <span className="font-sans text-[12px] text-[#7C8464] mt-1 leading-relaxed">Custom packing and private-label Makhana supply for business requirements.</span>
+                            </Link>
+                          </div>
+                        </div>
                       )}
-                    </motion.button>
+                    </div>
                   ))}
                 </div>
 
@@ -686,42 +714,75 @@ export default function Header({
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 custom-scrollbar">
                 {[
                   { label: 'Home', path: '/' },
-                  { label: 'Shop', path: '/products' },
                   { label: 'Wholesale', path: '/bulk' },
+                  { label: 'Shop', path: '/products' },
                   { label: 'About', path: '/about' },
                   { label: 'Contact', path: '/contact' },
                   { label: 'Wishlist', action: () => setIsWishlistOpen(true) },
                   { label: 'My Account', action: currentUser ? () => navigate('/account') : onOpenAuthModal },
                   { label: 'Orders', action: currentUser ? () => navigate('/account') : onOpenAuthModal },
                 ].map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      if (item.action) {
-                        item.action();
-                      } else if (item.path) {
-                        navigate(item.path);
-                      }
-                    }}
-                    className={`relative w-full h-[56px] flex items-center px-4 rounded-xl text-[15px] font-bold transition-colors text-left ${
-                      item.label === 'Wholesale'
-                        ? 'bg-[#143A2A]/5 text-[#143A2A] border border-[#143A2A]/10 hover:bg-[#143A2A]/10'
-                        : isNavActive(item.path || '') ? 'text-[#143A2A] bg-[#F8F5EE]' : 'text-stone-600 hover:bg-[#F8F5EE] hover:text-[#183D2F]'
-                    }`}
-                  >
-                    <span className="relative inline-block">
-                      {item.label}
-                      {isNavActive(item.path || '') && (
-                        <motion.div layoutId="underline-drawer" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#143A2A]" />
-                      )}
-                    </span>
-                    {item.label === 'Wholesale' && (
-                      <span className="ml-2 text-[9px] bg-[#C28E63] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        B2B
+                  <div key={idx}>
+                    <button
+                      onClick={() => {
+                        if (item.label === 'Wholesale') {
+                          setIsWholesaleExpanded(!isWholesaleExpanded);
+                        } else {
+                          setIsMobileMenuOpen(false);
+                          if (item.action) {
+                            item.action();
+                          } else if (item.path) {
+                            navigate(item.path);
+                          }
+                        }
+                      }}
+                      className={`relative w-full h-[56px] flex items-center justify-between px-4 rounded-xl text-[15px] font-bold transition-colors text-left ${
+                        item.label === 'Wholesale'
+                          ? 'bg-[#143A2A]/5 text-[#143A2A] border border-[#143A2A]/10 hover:bg-[#143A2A]/10'
+                          : isNavActive(item.path || '') ? 'text-[#143A2A] bg-[#F8F5EE]' : 'text-stone-600 hover:bg-[#F8F5EE] hover:text-[#183D2F]'
+                      }`}
+                    >
+                      <span className="relative inline-block">
+                        {item.label}
+                        {isNavActive(item.path || '') && item.label !== 'Wholesale' && (
+                          <motion.div layoutId="underline-drawer" className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#143A2A]" />
+                        )}
                       </span>
+                      <span className="relative flex items-center">
+                        {item.label === 'Wholesale' && (
+                          <span className="mr-3 text-[10px] px-2 py-0.5 rounded-full tracking-wider font-bold bg-[#143A2A]/10 text-[#143A2A]">B2B</span>
+                        )}
+                        {item.label === 'Wholesale' ? (
+                          <ChevronDown className={`w-5 h-5 transition-transform ${isWholesaleExpanded ? 'rotate-180' : ''} ${
+                            item.path && isNavActive(item.path) ? 'text-[#C28E63]' : 'text-[#143A2A]'
+                          }`} />
+                        ) : null}
+                      </span>
+                    </button>
+                    {item.label === 'Wholesale' && (
+                      <AnimatePresence>
+                        {isWholesaleExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pl-8 pr-4 py-2 flex flex-col gap-2">
+                              <Link to="/bulk" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col p-3 rounded-xl bg-stone-50 active:bg-stone-100">
+                                <span className="font-sans font-bold text-[#143A2A] text-sm">Bulk Supply</span>
+                                <span className="font-sans text-xs text-[#7C8464] mt-1">Large-volume Makhana supply with multiple grades and packing options.</span>
+                              </Link>
+                              <Link to="/private-label" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col p-3 rounded-xl bg-stone-50 active:bg-stone-100">
+                                <span className="font-sans font-bold text-[#143A2A] text-sm">Private Label</span>
+                                <span className="font-sans text-xs text-[#7C8464] mt-1">Custom packing and private-label Makhana supply for business requirements.</span>
+                              </Link>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
 

@@ -1,7 +1,7 @@
-import { ArrowRight, Star, Award, ShieldCheck, Truck, RotateCcw, CheckSquare, HeartHandshake, Leaf, Globe, CheckCircle2, ChevronRight, MapPin, ShoppingBag } from 'lucide-react';
+import { ArrowRight, Star, Award, ShieldCheck, Truck, RotateCcw, CheckSquare, HeartHandshake, Leaf, Globe, CheckCircle2, ChevronRight, MapPin, ShoppingBag , Package, FileText, Flower2} from 'lucide-react';
 import ContactForm from './ContactForm';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll } from 'motion/react';
 import { useState, useRef, useEffect } from 'react';
 import { Product, ScreenType } from '../types';
 import ProcessJourney from './ProcessJourney';
@@ -134,6 +134,7 @@ export default function HomeScreen({
   onAddToCart
 }: HomeScreenProps) {
   const navigate = useNavigate();
+  const { scrollYProgress } = useScroll();
   const [activeReel, setActiveReel] = useState<{video: string} | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [videoError, setVideoError] = useState(false);
@@ -168,223 +169,113 @@ export default function HomeScreen({
 
   return (
     <div className="font-sans bg-[#FAF8F4] overflow-hidden relative">
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[2.5px] bg-[#C28E63] origin-left z-[9999]"
+        style={{ scaleX: scrollYProgress }}
+      />
       <GlobalBackground />
       
-      {/* ─── HERO SECTION ─── */}
-      <div id="hero" className="w-full">
-        {/* ─── NEW MOBILE HERO (< 768px) ─── */}
-        <section 
-          className="md:hidden relative w-full min-h-[100svh] overflow-hidden"
-          style={{
-            backgroundImage: "url('/images/hero/mobile-hero.png')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
-        >
-          {/* Subtle gradient behind text only */}
-          <div 
-            className="absolute top-0 left-0 right-0 h-[50svh] z-0 pointer-events-none" 
-            style={{ 
-              background: 'linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.08) 45%, transparent 100%)' 
-            }} 
-          />
-
-          <div className="relative z-10 mx-auto flex flex-col items-center justify-start text-center pt-[20px]" style={{ width: 'min(90%, 420px)' }}>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-              <img src="/images/hero/logo.png" alt="Bihar Bite" style={{ width: 'clamp(90px, 26vw, 140px)', height: 'auto', objectFit: 'contain' }} />
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="mt-[18px] font-serif tracking-tight font-bold text-center"
-              style={{ fontSize: 'clamp(2.4rem, 7vw, 3.3rem)', lineHeight: 0.95, maxWidth: '85vw', textShadow: '0 4px 18px rgba(0,0,0,.35)' }}
-            >
-              <span style={{ color: '#6B1232' }}>Premium</span><br />
-              <span style={{ color: '#183D2F' }}>Makhana</span>
-            </motion.h1>
-
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="mt-[12px] font-serif italic text-center"
-              style={{ color: '#D7A54B', fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', textShadow: '0 2px 10px rgba(0,0,0,.25)' }}
-            >
-              100% Natural
-            </motion.h2>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-              className="mt-[14px] font-sans text-white font-medium text-center"
-              style={{ fontSize: 'clamp(0.95rem, 2.8vw, 1.15rem)', whiteSpace: 'nowrap', letterSpacing: '0.02em', textShadow: '0 2px 8px rgba(0,0,0,.25)' }}
-            >
-              Healthy &nbsp;•&nbsp; Crunchy &nbsp;•&nbsp; Farm Fresh
-            </motion.p>
-
-            <motion.button
-              onClick={() => handleCollectionClick('All')}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.0, ease: "easeOut" }}
-              className="mt-[18px] bg-white text-[#183D2F] rounded-[9999px] font-sans font-bold hover:bg-[#F8F5EE] transition-all shadow-[0_4px_12px_rgba(0,0,0,0.15)] cursor-pointer flex items-center justify-center tracking-[0.05em]"
-              style={{ width: 'clamp(180px, 58vw, 230px)', height: 'clamp(48px, 7vw, 56px)', fontSize: 'clamp(1rem, 3vw, 1.15rem)' }}
-            >
-              SHOP NOW
-            </motion.button>
+            {/* ─── HERO SECTION ─── */}
+      <div id="hero" className="w-full relative overflow-hidden bg-[#FDFBF7]">
+        <section className="relative w-full min-h-[100svh] md:min-h-screen flex flex-col md:flex-row items-stretch pt-[60px] md:pt-0">
+          
+          {/* Mobile Background Image (Top Half on Mobile) */}
+          <div className="w-full h-[45vh] md:hidden relative bg-[#E8E2D9]">
+            <img 
+              src="/images/hero/hero-composition.png" 
+              alt="Bihar Bite Premium Makhana Presentation" 
+              className="absolute inset-0 w-full h-full object-cover object-right" 
+            />
+            {/* Soft gradient fading into content on mobile */}
+            <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#FDFBF7] to-transparent"></div>
           </div>
-        </section>
 
-        {/* ─── DESKTOP HERO (>= 768px) ─── */}
-        <section
-          className="hidden md:block relative w-full min-h-screen overflow-hidden"
-          style={{
-            background:
-              'radial-gradient(ellipse 90% 70% at 60% 30%, #FFF8EC 0%, #F8F3EA 50%, #EDE4D6 100%)',
-          }}
-        >
-        {/* Loading Poster / Placeholder */}
-        <div 
-          className={`absolute inset-0 z-0 bg-[#E8E2D9] transition-opacity duration-[250ms] ease-in-out ${
-            isVideoReady ? 'opacity-0' : 'opacity-100'
-          }`} 
-        />
-
-        {/* Fullscreen Video Background */}
-        <video
-          key={isMobile ? 'mobile' : 'desktop'}
-          ref={videoRef}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          disablePictureInPicture
-          onCanPlay={() => setIsVideoReady(true)}
-          onError={() => setVideoError(true)}
-          className={`absolute inset-0 z-0 w-full h-full object-cover transition-opacity duration-[250ms] ease-in-out ${
-            isVideoReady && !videoError ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          {isMobile ? (
-            <source src="/videos/hero-m.mp4" type="video/mp4" />
-          ) : (
-            <source src="/flow.mp4" type="video/mp4" />
-          )}
-        </video>
-        
-        {/* Fallback Image if video fails */}
-        {videoError && (
-          <img 
-            src="/images/hero/hero-composition.png" 
-            alt="Hero Background" 
-            className="absolute inset-0 z-0 w-full h-full object-cover"
-          />
-        )}
-
-        {/* Subtle Text Readability Overlay */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 z-[5] pointer-events-none"
-          style={{
-            background: isMobile 
-              ? 'linear-gradient(90deg, rgba(0,0,0,0.60) 0%, rgba(0,0,0,0.45) 25%, rgba(0,0,0,0.20) 55%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0) 100%)'
-              : 'linear-gradient(to bottom, rgba(248,243,234,0.15) 0%, rgba(248,243,234,0.35) 100%)',
-          }}
-        />
-
-        {/* Two-column layout — Left 45% / Right 55% */}
-        <div className="relative z-10 flex min-h-[90vh] lg:h-screen lg:min-h-[700px] w-full max-w-[1600px] mx-auto px-6 md:px-14 lg:px-24 flex-col md:flex-row items-start md:items-center justify-start pt-[22vh] pb-[10vh] md:pt-0 md:pb-0">
-
-          {/* ── LEFT 45% ── */}
-          <div className="flex w-full max-w-[500px] md:max-w-none md:w-[45%] flex-col items-start justify-start mx-0 text-left">
-
-            {/* Brand Logo */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              className="mb-[16px] md:mb-[40px]"
-            >
-              <Leaf size={isMobile ? 42 : 56} className="text-white/95 md:text-[#143A2A]" strokeWidth={1.2} style={{ filter: isMobile ? 'drop-shadow(0 2px 10px rgba(0,0,0,0.4))' : 'none' }} />
-            </motion.div>
-
-            {/* Brand name */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-              className="font-serif font-semibold whitespace-nowrap mb-[16px] md:mb-[28px] text-[clamp(36px,9vw,44px)] md:text-responsive-h1 text-[#FBF9F6] md:text-[#143A2A]"
-              style={{
-                fontFamily: '"Cormorant Garamond", "Playfair Display", serif',
-                letterSpacing: isMobile ? '-0.5px' : '-1.5px',
-                lineHeight: 1.0,
-                textShadow: isMobile ? '0 4px 20px rgba(0,0,0,0.5)' : '0 2px 12px rgba(255,255,255,0.12)'
-              }}
-            >
-              Bihar Bite
-            </motion.h1>
-
-            {/* Luxury divider — animates from center */}
-            <motion.div
-              initial={{ scaleX: 0, opacity: 0 }}
-              animate={{ scaleX: 1, opacity: 1 }}
-              transition={{ duration: 1.0, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative flex items-center justify-center w-[120px] md:w-[220px] h-[1.5px] bg-[rgba(255,255,255,0.5)] md:bg-[rgba(184,151,86,0.7)] mb-[20px] md:mb-[24px]"
-            >
-              {/* Small luxury diamond ornament in the center */}
-              <div className="absolute w-[6px] h-[6px] rotate-45 bg-white md:bg-[rgba(184,151,86,1)] outline outline-[1px] outline-offset-[2px] outline-[rgba(255,255,255,0.3)] md:outline-[rgba(184,151,86,0.6)]" />
-            </motion.div>
-
-            {/* Tagline */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1.0, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="font-serif italic text-[16px] sm:text-[18px] md:text-responsive-h3 text-[rgba(255,255,255,0.92)] md:text-[#8A6A3E] leading-[1.5] md:leading-normal text-left"
-              style={{
-                fontFamily: '"Cormorant Garamond", "Playfair Display", serif',
-                letterSpacing: '0.4px',
-                textShadow: isMobile ? '0 2px 10px rgba(0,0,0,0.5)' : '0 2px 12px rgba(255,255,255,0.12)'
-              }}
-            >
-              {isMobile ? (
-                <>Sustainably Harvested<br/>Artfully Sourced</>
-              ) : (
-                <>Sustainably Harvested &nbsp;•&nbsp; Artfully Sourced</>
-              )}
-            </motion.p>
+          {/* Left Content Container */}
+          <div className="w-full md:w-[50%] lg:w-[50%] flex flex-col justify-center px-6 md:px-12 lg:px-24 py-10 md:py-[10vh] relative z-10 bg-[#FDFBF7]">
             
-            {/* CTA Button */}
-            {isMobile && (
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.0, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-8"
+            {/* Main Headline */}
+            <div className="mb-8 md:mb-12 max-w-[650px]">
+              {/* Brand Lockup */}
+              <div className="flex items-center gap-3 mb-6">
+                <img src="/images/hero/logo.png" alt="Bihar Bite Logo" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
+                <span className="font-serif text-[#143A2A] text-[24px] md:text-[32px] leading-none tracking-wide font-medium mt-1">
+                  Bihar <span className="italic">Bite</span>
+                </span>
+              </div>
+              
+              <h1 className="font-serif font-bold text-[#143A2A] text-[40px] sm:text-[46px] md:text-[54px] lg:text-[64px] leading-[1.15] tracking-tight mb-6">
+                Premium Makhana,<br/>
+                <span className="italic text-[#C28E63]">Direct from Bihar,</span><br/>
+                Supplied Across India
+              </h1>
+              <p className="font-sans text-[#8A6A3E] text-[12px] sm:text-[13px] font-bold tracking-[0.2em] uppercase mb-5">
+                WHOLESALE • BULK SUPPLY • PRIVATE LABEL
+              </p>
+              <p className="font-sans text-[#4A4A3A] text-[16px] md:text-[18px] leading-relaxed font-medium max-w-[550px]">
+                Graded Makhana from the wetlands of Bihar, supplied across India with consistent premium quality.
+              </p>
+            </div>
+
+            {/* Badges/Features (Clean Inline List) */}
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-8 mb-12 max-w-[650px]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#E8F3EE] rounded-full flex items-center justify-center text-[#1A4533]">
+                  <Leaf size={18} strokeWidth={2} />
+                </div>
+                <span className="font-sans font-bold text-[13px] text-[#143A2A] uppercase tracking-wide">Direct from Farms</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#E8F3EE] rounded-full flex items-center justify-center text-[#1A4533]">
+                  <Award size={18} strokeWidth={2} />
+                </div>
+                <span className="font-sans font-bold text-[13px] text-[#143A2A] uppercase tracking-wide">Premium Quality</span>
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 max-w-[650px] w-full">
+              <button 
+                onClick={() => setScreen('bulk')} 
+                className="flex-1 bg-[#1A4533] text-white p-4 rounded-xl hover:bg-[#143A2A] hover:-translate-y-0.5 transition-all duration-300 shadow-md hover:shadow-xl flex items-center justify-center gap-3 group"
               >
-                <button 
-                  onClick={() => handleCollectionClick('All')}
-                  className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-3.5 rounded-full font-sans text-[11px] uppercase tracking-[0.15em] font-bold hover:bg-white hover:text-[#143A2A] transition-all shadow-lg active:scale-95"
-                >
-                  Explore Collection
-                </button>
-              </motion.div>
-            )}
+                <Package size={18} strokeWidth={2} className="text-white/80 group-hover:text-white transition-colors" />
+                <span className="font-sans font-bold text-[14px] tracking-wide text-white">GET B2B QUOTE</span>
+              </button>
+              
+              <button 
+                onClick={() => window.open('https://wa.me/917985347849?text=Hello%20Bihar%20Bite,%20I%20would%20like%20to%20request%20a%20sample%20of%20Makhana.', '_blank')} 
+                className="flex-1 bg-white text-[#143A2A] border border-[#143A2A]/15 p-4 rounded-xl hover:border-[#143A2A]/30 hover:bg-[#FAF8F4] hover:-translate-y-0.5 transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-3"
+              >
+                <svg className="w-4 h-4 fill-[#1A4533]" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                <span className="font-sans font-bold text-[14px] tracking-wide text-[#143A2A]">REQUEST SAMPLE</span>
+              </button>
+            </div>
+
+            {/* Trust Signals (Subtle Text below buttons) */}
+            <div className="mt-8 pt-6 border-t border-[#143A2A]/5 flex items-center gap-6 max-w-[650px]">
+              <div className="flex items-center gap-2">
+                <ShoppingBag size={14} className="text-[#8A6A3E]" />
+                <span className="font-sans text-[11px] font-bold text-[#4A4A3A] tracking-wider uppercase">50 KG+ MOQ</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FileText size={14} className="text-[#8A6A3E]" />
+                <span className="font-sans text-[11px] font-bold text-[#4A4A3A] tracking-wider uppercase">GST Billing</span>
+              </div>
+            </div>
+
           </div>
 
-
-
-        </div>
+          {/* Right Desktop Image Showcase */}
+          <div className="hidden md:block w-[50%] lg:w-[50%] relative h-screen bg-[#FDFBF7]">
+            <img 
+              src="/images/hero/hero-composition.png" 
+              alt="Bihar Bite Premium Makhana Presentation" 
+              className="absolute inset-0 w-full h-full object-cover object-[85%_center]" 
+            />
+            {/* Subtle soft gradient fading from left to blend the image border softly into the background */}
+            <div className="absolute inset-y-0 left-0 w-[10%] bg-gradient-to-r from-[#FDFBF7] to-transparent z-10 pointer-events-none"></div>
+          </div>
+          
         </section>
       </div>
 
@@ -401,10 +292,13 @@ export default function HomeScreen({
             {[...Array(2)].map((_, i) => (
               <div key={i} className="flex items-center shrink-0">
                 {[
+                  "Direct Bihar Sourcing",
+                  "Multiple Grades",
+                  "Consistent Quality",
+                  "Bulk Supply",
                   "FSSAI Approved",
                   "Ancient Superfood",
                   "100% Natural",
-                  "Rich in Protein",
                   "Handpicked Quality",
                   "Gluten Free",
                   "Make in India",
@@ -435,8 +329,8 @@ export default function HomeScreen({
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {[
-              { num: "10,000+", label: "Farmers Connected" },
-              { num: "25+", label: "Countries Served" },
+              { num: "500+", label: "Farmers Connected" },
+              { num: "3+", label: "Countries Served" },
               { num: "100%", label: "Natural & Organic" },
               { num: "Premium", label: "Export Grade" },
             ].map((stat, i) => (

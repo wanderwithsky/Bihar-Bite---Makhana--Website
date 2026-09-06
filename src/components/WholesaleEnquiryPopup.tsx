@@ -73,7 +73,7 @@ export default function WholesaleEnquiryPopup() {
         </button>
 
         <h3 className="font-serif text-[#143A2A] font-bold text-lg md:text-xl tracking-wide mt-2 mb-3 leading-tight uppercase">
-          📦 50 KG+ BULK ENQUIRIES WELCOME 🤝
+          50 Kg+ Bulk Enquiries Welcome 🥜✨
         </h3>
         
         <p className="text-sm md:text-base text-on-surface-variant/80 font-medium">
