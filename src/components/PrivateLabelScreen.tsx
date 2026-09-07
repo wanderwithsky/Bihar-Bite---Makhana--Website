@@ -26,16 +26,18 @@ export default function PrivateLabelScreen() {
     <div className="bg-[#FAF8F4] min-h-screen font-sans selection:bg-[#143A2A]/20 overflow-x-hidden">
       
       {/* Hero Section */}
-      <section className="relative pt-[110px] sm:pt-[130px] md:pt-[140px] pb-16 md:pb-24 overflow-hidden">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+      <section className="relative w-full min-h-[90svh] lg:min-h-[90vh] flex items-center justify-center pt-[100px] md:pt-[120px] pb-16 md:pb-24 overflow-hidden">
+        {/* Controlled maximum width centered container */}
+        <div className="w-full max-w-[1250px] mx-auto px-6 lg:px-12">
+          {/* Two column composition: 55% Left / 45% Right on large screens */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
             
-            {/* Left Content */}
+            {/* Left Content (55%) */}
             <motion.div 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="space-y-8 z-10 lg:-mt-10"
+              className="w-full lg:w-[55%] space-y-8 flex flex-col justify-center"
             >
               <div className="flex items-center gap-4">
                 <span className="w-12 h-[1px] bg-[#C28E63]"></span>
@@ -65,18 +67,20 @@ export default function PrivateLabelScreen() {
               </div>
             </motion.div>
 
-            {/* Right Visual Composition */}
+            {/* Right Visual Composition (45%) */}
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-              className="relative w-full flex items-center justify-center lg:justify-end mt-12 lg:mt-0"
+              className="w-full lg:w-[45%] relative flex items-center justify-center mt-16 lg:mt-0"
             >
-              <img 
-                src="/images/hero/private-label-hero.png" 
-                alt="Premium Private Label Packaging" 
-                className="w-full max-w-[900px] h-auto object-contain lg:translate-x-12 scale-110 lg:scale-[1.25] mix-blend-multiply origin-right"
-              />
+              <div className="relative w-full max-w-[500px] lg:max-w-none flex justify-center items-center">
+                <img 
+                  src="/images/hero/private-label-hero.png" 
+                  alt="Premium Private Label Packaging" 
+                  className="w-full h-auto object-contain mix-blend-multiply drop-shadow-xl scale-110 sm:scale-125 lg:scale-[1.40] origin-center"
+                />
+              </div>
             </motion.div>
             
           </div>

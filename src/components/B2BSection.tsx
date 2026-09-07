@@ -1,11 +1,29 @@
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useEffect, useRef } from 'react';
 
 interface B2BSectionProps {
   onNavigateBulk: () => void;
 }
 
 export default function B2BSection({ onNavigateBulk }: B2BSectionProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          videoRef.current?.play().catch(() => {});
+        } else {
+          videoRef.current?.pause();
+        }
+      });
+    }, { threshold: 0.3 });
+    observer.observe(videoRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const whatsappNumber = "917880454502";
   const whatsappMessage = encodeURIComponent("Hello Bihar Bite, I am interested in wholesale/bulk Makhana supply.");
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
@@ -73,18 +91,21 @@ export default function B2BSection({ onNavigateBulk }: B2BSectionProps) {
             </div>
           </motion.div>
           
-          {/* RIGHT SIDE: Image */}
+          {/* RIGHT SIDE: Video */}
           <motion.div 
             initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-            className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-[32px] overflow-hidden shadow-2xl group"
+            className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-[32px] overflow-hidden shadow-2xl group flex items-center justify-center bg-[#143A2A]"
           >
-            <div className="absolute inset-0 bg-[#E8E2D9] pointer-events-none" />
-            <img 
-              src="/images/hero/hero-composition.png" 
-              alt="Premium Bihar Makhana Wholesale"
+            <video 
+              ref={videoRef}
+              src="/flow.mp4" 
+              muted
+              loop
+              playsInline
+              preload="none"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
             {/* Subtle Gradient overlay for premium feel */}

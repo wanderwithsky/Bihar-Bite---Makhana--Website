@@ -491,7 +491,7 @@ export default function Header({
                     setIsExpanded(true);
                   }
                 }}
-                className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full flex items-center justify-center bg-[#21492F] md:bg-[#5A6342] text-white shadow-lg cursor-pointer border-[0.5px] border-white/30 backdrop-blur-md"
+                className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full flex items-center justify-center bg-[#1A4533] text-white shadow-lg cursor-pointer border-[0.5px] border-white/30 backdrop-blur-md"
                 aria-label="Open Navigation"
               >
                 <Menu className="w-5 h-5 text-white" strokeWidth={1.5} />
