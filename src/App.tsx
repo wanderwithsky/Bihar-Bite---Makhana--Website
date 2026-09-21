@@ -109,7 +109,28 @@ export default function App() {
         setProductsError(null);
         try {
           const fetchedProducts = await fetchProducts();
-          setCatalogProducts(fetchedProducts || []);
+          const patchedProducts = fetchedProducts?.map(p => {
+             const pName = p.name.toLowerCase();
+             if (pName.includes('roasted makhana') || pName.includes('himalayan pink salt roasted')) {
+                 return {
+                     ...p,
+                     image: 'https://res.cloudinary.com/twhpmnfb/image/upload/v1789978290/roasted-makhana.jpg',
+                     images: [...(p.images || [p.image]).filter(Boolean), 'https://res.cloudinary.com/twhpmnfb/image/upload/v1789978290/roasted-makhana.jpg'],
+                     galleryImages: [...(p.galleryImages || [p.image]).filter(Boolean), 'https://res.cloudinary.com/twhpmnfb/image/upload/v1789978290/roasted-makhana.jpg']
+                 };
+             }
+             if (pName.includes('peri peri') || pName.includes('peri-peri')) {
+                 const periPeriImg = 'https://res.cloudinary.com/twhpmnfb/image/upload/v1789983764/ae88b34a-c494-4b48-b241-105220d372e1.png';
+                 return {
+                     ...p,
+                     image: periPeriImg,
+                     images: [...(p.images || [p.image]).filter(Boolean), periPeriImg],
+                     galleryImages: [...(p.galleryImages || [p.image]).filter(Boolean), periPeriImg]
+                 };
+             }
+             return p;
+          });
+          setCatalogProducts(patchedProducts || []);
         } catch (err: any) {
           console.error('Failed to load products from Supabase:', err);
           setProductsError('Unable to load products. Please try again.');

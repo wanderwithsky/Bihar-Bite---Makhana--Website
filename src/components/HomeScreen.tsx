@@ -169,6 +169,50 @@ export default function HomeScreen({
 
   const bestsellers = products.filter((p) => p.isBestseller).slice(0, 3);
 
+  const handleProductClick = (homepageProdName: string, isExploreFlavours = false) => {
+    if (isExploreFlavours) {
+      setIsFlavoursExpanded(!isFlavoursExpanded);
+      return;
+    }
+
+    // Explicit mapping for specific homepage cards to canonical Shop slugs
+    const explicitMap: Record<string, string> = {
+      'Peri Peri Makhana': 'smoked-peri-peri',
+      'Roasted Makhana': 'roasted',
+    };
+
+    const mappedSlug = explicitMap[homepageProdName];
+
+    let match = products.find(p => {
+      // 1. Explicit slug match
+      if (mappedSlug && (p as any).slug === mappedSlug) return true;
+      // 2. Exact ID match
+      if (p.id === homepageProdName) return true;
+      // 3. Exact slug match
+      if ((p as any).slug === homepageProdName) return true;
+      
+      // 4. Normalized name fallback
+      const normalize = (s: string) => s.toLowerCase().replace(/loose makhana|raw makhana|makhana/g, '').replace(/-/g, ' ').trim();
+      const target = normalize(homepageProdName);
+      const pName = normalize(p.name);
+      
+      if (target === 'peri peri' && pName.includes('peri peri')) return true;
+      if (target === '6+ handpick' && (pName.includes('6 suta handpick') || pName.includes('6+'))) return true;
+      if (pName === target || p.name.toLowerCase().includes(target)) return true;
+      
+      return false;
+    });
+
+    if (match) {
+      setIsRawMakhanaModalOpen(false);
+      navigate(`/product/${(match as any).slug || match.id}`);
+      window.scrollTo(0,0);
+    } else {
+      console.warn(`No shop product match found for: ${homepageProdName}`);
+    }
+  };
+
+
   return (
     <div className="font-sans bg-[#FAF8F4] overflow-hidden relative">
       <motion.div
@@ -387,9 +431,9 @@ export default function HomeScreen({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { id: 'raw-1', name: '4 Suta', price: '₹500/kg', img: '/images/01.png' },
-                { id: 'raw-2', name: '4+ Suta', price: '₹800/kg', img: '/images/02.png' },
-                { id: 'raw-3', name: '5 Suta', price: '₹850/kg', img: '/images/03.png' },
+                { id: 'raw-1', name: '4 Suta', price: '₹500/kg', img: '/images/01.png', video: 'https://res.cloudinary.com/twhpmnfb/video/upload/v1789978294/4.mp4' },
+                { id: 'raw-2', name: '4+ Suta', price: '₹800/kg', img: '/images/02.png', video: 'https://res.cloudinary.com/twhpmnfb/video/upload/v1789978294/four_plus.mp4' },
+                { id: 'raw-3', name: '5 Suta', price: '₹850/kg', img: 'https://res.cloudinary.com/twhpmnfb/image/upload/v1789978290/5.jpg' },
                 { id: 'raw-4', name: '5+ Suta', price: '₹940/kg', img: '/images/04.png' },
                 { id: 'raw-5', name: '6 Suta', price: '₹1,100/kg', img: '/images/makhana-05.jpeg' },
                 { id: 'raw-6', name: '6+ Handpick', price: '₹1,220/kg', img: '/images/01.png' },
@@ -401,14 +445,21 @@ export default function HomeScreen({
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.5, delay: idx * 0.05 }}
                   className="group bg-white rounded-[24px] border border-[#EBE6DA] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
-                  onClick={() => {
-                    setSelectedProduct({ id: prod.id, name: `${prod.name} Raw Makhana`, price: 0, priceDisplay: prod.price, image: prod.img, images: [prod.img], category: 'Raw', description: 'Premium B2B Raw Makhana. Minimum order 50 KG.', weight: '50kg MOQ' } as any);
-                    setScreen('product');
-                    window.scrollTo(0,0);
-                  }}
+                  onClick={() => handleProductClick(prod.name)}
                 >
                   <div className="w-full h-[300px] p-8 flex items-center justify-center bg-[#FDFBF7]">
-                    <img src={prod.img} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out drop-shadow-sm mix-blend-multiply" />
+                    {prod.video ? (
+                      <video 
+                        src={prod.video} 
+                        autoPlay 
+                        muted 
+                        loop 
+                        playsInline 
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out drop-shadow-sm mix-blend-multiply" 
+                      />
+                    ) : (
+                      <img src={prod.img} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out drop-shadow-sm mix-blend-multiply" />
+                    )}
                   </div>
                   <div className="p-8 border-t border-[#EBE6DA]/50 flex flex-col grow justify-between bg-white relative z-10">
                     <div>
@@ -432,8 +483,8 @@ export default function HomeScreen({
             <h3 className="font-serif text-[32px] md:text-[36px] text-[#143A2A] mb-10 border-b border-[#EBE6DA] pb-4 font-bold">Roasted & Flavoured</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { id: 'roast-1', name: 'Roasted Makhana', price: '₹1,250/kg', img: '/images/04.png' },
-                { id: 'roast-2', name: 'Peri Peri Makhana', price: 'Bulk Pricing', img: '/images/02.png' },
+                { id: 'roast-1', name: 'Roasted Makhana', price: '₹1699/kg', img: 'https://res.cloudinary.com/twhpmnfb/image/upload/v1789978290/roasted-makhana.jpg' },
+                { id: 'roast-2', name: 'Peri Peri Makhana', price: 'Bulk Pricing', img: 'https://res.cloudinary.com/twhpmnfb/image/upload/v1789983764/ae88b34a-c494-4b48-b241-105220d372e1.png' },
               ].map((prod, idx) => (
                 <motion.div
                   key={prod.id}
@@ -442,11 +493,7 @@ export default function HomeScreen({
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
                   className="group bg-white rounded-[24px] border border-[#EBE6DA] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
-                  onClick={() => {
-                    setSelectedProduct({ id: prod.id, name: prod.name, price: 0, priceDisplay: prod.price, image: prod.img, images: [prod.img], category: 'Roasted', description: 'Premium B2B Roasted & Flavoured Makhana. Minimum order 50 KG.', weight: '50kg MOQ' } as any);
-                    setScreen('product');
-                    window.scrollTo(0,0);
-                  }}
+                  onClick={() => handleProductClick(prod.name)}
                 >
                   <div className="w-full h-[300px] p-8 flex items-center justify-center bg-[#FDFBF7]">
                     <img src={prod.img} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out drop-shadow-sm mix-blend-multiply" />
@@ -497,25 +544,66 @@ export default function HomeScreen({
                     <motion.div 
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="flex flex-col items-center justify-center w-full h-full"
+                      className="flex flex-col w-full h-full text-left"
                     >
-                      <h4 className="font-serif italic text-[28px] text-[#143A2A] mb-8">Custom Flavours</h4>
-                      <div className="flex flex-col gap-4 w-full max-w-[250px]">
-                        {['Tangy Tomato', 'Mint & Lime', 'Cheese & Herbs', 'Indian Masala'].map((flavour, i) => (
-                          <motion.div 
-                            key={i}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className="font-sans text-[15px] text-[#4A4A3A] font-medium border-b border-[#EBE6DA] pb-3 flex justify-between items-center"
-                          >
-                            <span>{flavour}</span>
-                            <span className="text-[10px] text-[#8A6A3E] uppercase tracking-widest font-bold">MOQ 50 KG</span>
-                          </motion.div>
-                        ))}
+                      <h4 className="font-serif italic text-[24px] md:text-[28px] text-[#143A2A] mb-4 text-center">More Options</h4>
+                      <div className="flex flex-col gap-3 w-full overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '320px' }}>
+                        {products.filter(p => {
+                          const n = p.name.toLowerCase();
+                          if (n.includes('4 suta') && !n.includes('4+')) return true;
+                          if (n.includes('5 suta') && !n.includes('5+')) return true;
+                          if (n.includes('6 suta handpick') || n.includes('6+')) return true;
+                          if (n.includes('10 kg')) return true;
+                          if (n.includes('gold')) return true;
+                          return false;
+                        }).map((prod, i) => {
+                          const coverImage = (prod as any).images?.[0] || prod.image || '/images/01.png';
+                          return (
+                            <motion.div 
+                              key={prod.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: i * 0.05 }}
+                              onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleProductClick(prod.name);
+                              }}
+                              className="group/item flex items-center gap-4 p-3 bg-white border border-[#EBE6DA] rounded-[16px] hover:border-[#C28E63] hover:shadow-md transition-all cursor-pointer"
+                            >
+                              <div className="w-14 h-14 bg-[#FDFBF7] rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+                                 <img src={coverImage} className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500" alt={prod.name} />
+                              </div>
+                              <div className="flex-grow">
+                                 <h5 className="font-sans font-bold text-[13px] md:text-[14px] text-[#143A2A] leading-tight">{prod.name}</h5>
+                                 <p className="font-sans font-bold text-[#8A6A3E] text-[12px] md:text-[13px] mt-1">
+                                   ₹{prod.weightPrices ? prod.weightPrices[prod.weights?.[0] || '100g'] || prod.price : prod.price}
+                                 </p>
+                              </div>
+                              <div className="flex flex-col items-end justify-between h-full gap-2 shrink-0">
+                                 <span className="text-[9px] text-[#4A4A3A] uppercase tracking-widest bg-[#F5F2EA] px-2 py-1 rounded font-bold">MOQ 50 KG</span>
+                                 <span className="text-[10px] text-[#C28E63] font-bold uppercase tracking-widest flex items-center gap-1 group-hover/item:translate-x-1 transition-transform">
+                                   VIEW <ArrowRight size={10}/>
+                                 </span>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                        {products.filter(p => {
+                          const n = p.name.toLowerCase();
+                          if (n.includes('4 suta') && !n.includes('4+')) return true;
+                          if (n.includes('5 suta') && !n.includes('5+')) return true;
+                          if (n.includes('6 suta handpick') || n.includes('6+')) return true;
+                          if (n.includes('10 kg')) return true;
+                          if (n.includes('gold')) return true;
+                          return false;
+                        }).length === 0 && (
+                          <div className="text-center text-[#4A4A3A] text-[14px] py-4">
+                            More options arriving soon!
+                          </div>
+                        )}
                       </div>
-                      <span className="mt-8 font-sans font-bold text-[11px] text-[#143A2A] uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity">
-                        Click to close
+                      <span className="mt-4 font-sans font-bold text-[10px] md:text-[11px] text-[#143A2A] uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity text-center w-full block">
+                        Click anywhere to close
                       </span>
                     </motion.div>
                   )}
@@ -631,7 +719,7 @@ export default function HomeScreen({
               transition={{ duration: 0.7 }}
               className="lg:col-span-8 group relative bg-[#0E281C]/50 rounded-[32px] overflow-hidden cursor-pointer min-h-[450px] md:min-h-[550px] flex items-center shadow-2xl border border-white/10 backdrop-blur-sm"
               onClick={() => {
-                setSelectedProduct({ id: 'feat-1', name: 'Premium Roasted Makhana', price: 0, priceDisplay: '₹1,250/kg', image: '/images/04.png', images: ['/images/04.png'], category: 'Roasted', description: 'Curated premium roasted makhana for bulk buyers.', weight: '50kg MOQ' } as any);
+                setSelectedProduct({ id: 'feat-1', name: 'Premium Roasted Makhana', price: 0, priceDisplay: '₹1699/kg', image: '/images/04.png', images: ['/images/04.png'], category: 'Roasted', description: 'Curated premium roasted makhana for bulk buyers.', weight: '50kg MOQ' } as any);
                 setScreen('product');
                 window.scrollTo(0,0);
               }}
@@ -1096,12 +1184,12 @@ export default function HomeScreen({
               <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[
-                    { id: 'raw-1', name: '4 Suta', price: '₹500/kg', img: '/images/01.png' },
-                    { id: 'raw-2', name: '4+ Suta', price: '₹800/kg', img: '/images/02.png' },
-                    { id: 'raw-3', name: '5 Suta', price: '₹850/kg', img: '/images/03.png' },
-                    { id: 'raw-4', name: '5+ Suta', price: '₹940/kg', img: '/images/04.png' },
-                    { id: 'raw-5', name: '6 Suta', price: '₹1,100/kg', img: '/images/makhana-05.jpeg' },
-                    { id: 'raw-6', name: '6+ Handpick', price: '₹1,220/kg', img: '/images/01.png' },
+                    { id: 'raw-1', name: '4 Suta', price: '₹500/kg', img: '/images/01.png', video: 'https://res.cloudinary.com/twhpmnfb/video/upload/v1789978294/4.mp4' },
+                    { id: 'raw-2', name: '4+ Suta', price: '₹800/kg', img: '/images/02.png', video: 'https://res.cloudinary.com/twhpmnfb/video/upload/v1789978294/four_plus.mp4' },
+                    { id: 'raw-3', name: '5 Suta', price: '₹850/kg', img: 'https://res.cloudinary.com/twhpmnfb/image/upload/v1789978290/5.jpg' },
+                    { id: 'raw-4', name: '5+ Suta', price: '₹940/kg', img: '/images/04.png', video: 'https://res.cloudinary.com/twhpmnfb/video/upload/v1789978893/5_suta.mp4' },
+                    { id: 'raw-5', name: '6 Suta', price: '₹1,100/kg', img: '/images/makhana-05.jpeg', video: 'https://res.cloudinary.com/twhpmnfb/video/upload/v1789978848/6_suta.mp4' },
+                    { id: 'raw-6', name: '6+ Handpick', price: '₹1,220/kg', img: '/images/01.png', video: 'https://res.cloudinary.com/twhpmnfb/video/upload/v1789978848/6_suta.mp4' },
                   ].map((prod, idx) => (
                     <motion.div
                       key={prod.id}
@@ -1109,40 +1197,32 @@ export default function HomeScreen({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: idx * 0.05 }}
                       className="group bg-white rounded-[24px] border border-[#EBE6DA] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col h-full"
+                      onClick={() => handleProductClick(prod.name)}
                     >
                       <div className="relative w-full h-[250px] p-6 flex items-center justify-center bg-[#FDFBF7]">
-                        <img src={prod.img} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out drop-shadow-sm mix-blend-multiply" />
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <button 
-                            className="bg-[#C28E63] hover:bg-[#a67751] text-white font-sans font-bold text-[12px] uppercase tracking-widest px-6 py-3 rounded-full flex items-center gap-2 shadow-lg transition-transform hover:scale-105 active:scale-95"
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              if (onAddToCart) onAddToCart({ id: prod.id, name: `${prod.name} Raw Makhana`, price: parseInt(prod.price.replace(/[^\d]/g, '')), image: prod.img } as any, '50kg MOQ', 1);
-                            }}
-                          >
-                            <ShoppingBag size={16} /> Add to Cart
-                          </button>
-                          <button 
-                            className="bg-white hover:bg-gray-100 text-[#143A2A] font-sans font-bold text-[12px] uppercase tracking-widest px-6 py-3 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setIsRawMakhanaModalOpen(false);
-                              setSelectedProduct({ id: prod.id, name: `${prod.name} Raw Makhana`, price: 0, priceDisplay: prod.price, image: prod.img, images: [prod.img], category: 'Raw', description: 'Premium B2B Raw Makhana. Minimum order 50 KG.', weight: '50kg MOQ' } as any);
-                              setScreen('product');
-                              window.scrollTo(0,0);
-                            }}
-                          >
-                            View Details
-                          </button>
-                        </div>
+                        {prod.video ? (
+                          <video 
+                            src={prod.video} 
+                            autoPlay 
+                            muted 
+                            loop 
+                            playsInline 
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out drop-shadow-sm mix-blend-multiply" 
+                          />
+                        ) : (
+                          <img src={prod.img} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out drop-shadow-sm mix-blend-multiply" />
+                        )}
                       </div>
-                      <div className="p-6 border-t border-[#EBE6DA]/50 flex flex-col grow justify-between bg-white">
+                      <div className="p-6 border-t border-[#EBE6DA]/50 flex flex-col grow justify-between bg-white relative z-10">
                         <div>
                           <h4 className="font-sans font-bold text-[20px] text-[#143A2A] mb-1">{prod.name}</h4>
-                          <p className="font-sans font-bold text-[#8A6A3E] text-[18px]">{prod.price}</p>
+                          <p className="font-sans font-bold text-[#8A6A3E] text-[18px] mb-4">{prod.price}</p>
                         </div>
-                        <div className="mt-4 pt-4 border-t border-dashed border-[#EBE6DA]">
+                        <div className="mt-auto pt-4 border-t border-dashed border-[#EBE6DA] flex items-center justify-between">
                           <span className="font-sans font-bold text-[10px] text-[#4A4A3A] uppercase tracking-widest bg-[#F5F2EA] px-3 py-1.5 rounded-md">MOQ 50 KG</span>
+                          <span className="font-sans font-bold text-[11px] text-[#143A2A] uppercase tracking-widest group-hover:text-[#C28E63] transition-colors flex items-center gap-1.5">
+                            VIEW DETAILS <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
+                          </span>
                         </div>
                       </div>
                     </motion.div>

@@ -2,45 +2,71 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const availableImages = [
-  "/gallery/WhatsApp Image 2026-08-01 at 2.51.08 PM.jpeg",
-  "/gallery/WhatsApp Image 2026-08-01 at 2.51.09 PM.jpeg",
-  "/gallery/WhatsApp Image 2026-08-01 at 2.51.10 PM.jpeg",
-  "/gallery/WhatsApp Image 2026-08-01 at 2.52.12 PM.jpeg",
-  "/gallery/WhatsApp Image 2026-08-01 at 2.58.43 PM.jpeg",
-  "/gallery/WhatsApp Image 2026-08-01 at 2.58.47 PM.jpeg",
-  "/gallery/WhatsApp Image 2026-08-01 at 2.58.49 PM.jpeg"
+const curatedImages = [
+  {
+    src: "/gallery/WhatsApp Image 2026-08-01 at 2.51.08 PM.jpeg",
+    title: "Harvest Morning", sub: "Bihar Origin",
+    gridClass: "col-span-1 md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2"
+  },
+  {
+    src: "/gallery/WhatsApp Image 2026-08-01 at 2.51.10 PM.jpeg",
+    title: "Hand Sorted", sub: "Raw & Pure",
+    gridClass: "col-span-1 row-span-1 md:col-span-1 md:row-span-1"
+  },
+  {
+    src: "/gallery/WhatsApp Image 2026-08-01 at 2.51.09 PM.jpeg",
+    title: "Freshly Roasted", sub: "Traditional Process",
+    gridClass: "col-span-1 row-span-1 md:col-span-1 md:row-span-2"
+  },
+  {
+    src: "https://res.cloudinary.com/twhpmnfb/image/upload/v1789978288/roasted-makhana-1250.jpg",
+    title: "Golden Roasted", sub: "Perfect Crunch",
+    gridClass: "col-span-1 row-span-1 md:col-span-1 md:row-span-1"
+  },
+  {
+    src: "https://res.cloudinary.com/twhpmnfb/image/upload/v1789986255/8e196dfc-903e-4401-b797-f9db83607020.jpg",
+    title: "Spicy & Savory", sub: "Flavoured Makhana",
+    gridClass: "col-span-1 md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2"
+  },
+  {
+    src: "https://res.cloudinary.com/twhpmnfb/image/upload/v1789986272/b68211f8-7286-4a33-8415-444a0c104d50.jpg",
+    title: "Village Roasting", sub: "Community Heritage",
+    gridClass: "col-span-1 row-span-1 md:col-span-1 md:row-span-1"
+  },
+  {
+    src: "https://res.cloudinary.com/twhpmnfb/image/upload/v1789986249/d08e4f36-856d-4ea2-9b27-bc148e280bf4.jpg",
+    title: "Warehouse Inventory", sub: "Export Quality",
+    gridClass: "col-span-1 row-span-1 md:col-span-1 md:row-span-1"
+  },
+  {
+    src: "https://res.cloudinary.com/twhpmnfb/image/upload/v1789986263/88572929-afd2-4ed6-8a68-7de19e8ff469.jpg",
+    title: "Decoding Grades", Nature: "Quality Metrics",
+    gridClass: "col-span-1 md:col-span-2 lg:col-span-2 row-span-1"
+  },
+  {
+    src: "/gallery/WhatsApp Image 2026-08-01 at 2.52.12 PM.jpeg",
+    title: "Premium Packaging", sub: "Bihar's Pride",
+    gridClass: "col-span-1 row-span-1 md:row-span-2"
+  },
+  {
+    src: "https://res.cloudinary.com/twhpmnfb/image/upload/v1789978290/5.jpg",
+    title: "Retail Pouch", sub: "Everyday Nutrition",
+    gridClass: "col-span-1 row-span-1 md:row-span-2"
+  },
+  {
+    src: "/gallery/WhatsApp Image 2026-08-01 at 2.58.49 PM.jpeg",
+    title: "Makhana Cookies", sub: "Healthy Snacking",
+    gridClass: "col-span-1 md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2"
+  }
 ];
 
-const titles = [
-  { title: "Harvest Morning", sub: "Mithila Wetlands" },
-  { title: "Freshly Roasted", sub: "Traditional Process" },
-  { title: "Hand Sorted", sub: "Generations of Care" },
-  { title: "Premium Selection", sub: "Export Quality" },
-  { title: "Organic Farming", sub: "Bihar's Pride" },
-  { title: "Perfect Crunch", sub: "Slow Roasted" },
-  { title: "Golden Hour", sub: "Lotus Ponds" },
-  { title: "Village Life", sub: "Community Heritage" },
-  { title: "Nature's Bounty", sub: "Raw & Pure" },
-  { title: "Healthy Snacking", sub: "Everyday Nutrition" },
-];
-
-const aspectRatios = [
-  'aspect-[1/1]', 'aspect-[4/5]', 'aspect-[3/4]', 
-  'aspect-[16/9]', 'aspect-[9/16]', 'aspect-[5/4]', 
-  'aspect-[21/9]'
-];
-
-const galleryItems = availableImages.map((src, i) => {
-  return {
-    id: i,
-    src,
-    title: titles[i % titles.length].title,
-    sub: titles[i % titles.length].sub,
-    // Add some pseudo-randomness to aspect ratios based on index
-    aspectClass: aspectRatios[(i * 3 + 7) % aspectRatios.length],
-  };
-});
+const galleryItems = curatedImages.map((img, i) => ({
+  id: i,
+  src: img.src,
+  title: img.title,
+  sub: img.sub,
+  gridClass: img.gridClass
+}));
 
 export default function GallerySection() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -87,36 +113,36 @@ export default function GallerySection() {
           </p>
         </motion.div>
 
-        {/* Pinterest-style Masonry Gallery */}
-        <div className="w-[90%] max-w-[1800px] mx-auto columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-3 space-y-3">
+        {/* Editorial Masonry Gallery */}
+        <div className="w-[95%] max-w-[1700px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 auto-rows-[250px] lg:auto-rows-[300px] grid-flow-dense px-4">
           {galleryItems.map((item, index) => (
             <motion.div 
               key={item.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "50px" }}
               transition={{ 
-                duration: 0.6, 
-                delay: (index % 5) * 0.1, // staggered reveal
-                ease: "easeOut" 
+                duration: 0.8, 
+                delay: (index % 4) * 0.15,
+                ease: [0.23, 1, 0.32, 1] 
               }}
               onClick={() => setLightboxIndex(index)}
-              className="relative break-inside-avoid overflow-hidden rounded-[20px] group cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500 bg-[#EBE6DA]"
+              className={`relative overflow-hidden rounded-[24px] group cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500 bg-[#EBE6DA] ${item.gridClass}`}
             >
-              <div className={`${item.aspectClass} relative w-full`}>
+              <div className="relative w-full h-full">
                 <img 
                   src={item.src} 
                   alt={item.title}
                   loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.05] group-hover:brightness-110"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
                 />
                 
                 {/* Soft Glass Overlay from Bottom */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-5 md:p-6">
-                   <h4 className="text-white font-serif text-[18px] md:text-[20px] leading-snug transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6 md:p-8">
+                   <h4 className="text-white font-serif text-[20px] md:text-[24px] leading-snug transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                      {item.title}
                    </h4>
-                   <span className="text-[#D8C29A] font-sans font-medium text-[11px] uppercase tracking-widest mt-1 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">
+                   <span className="text-[#D8C29A] font-sans font-medium text-[11px] md:text-[12px] uppercase tracking-widest mt-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">
                      {item.sub}
                    </span>
                 </div>
